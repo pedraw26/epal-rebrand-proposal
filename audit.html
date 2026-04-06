@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPAL — Auditoria de Marca</title>
+<style>
+  @font-face { font-family: 'SF Pro Display'; src: local('SF Pro Display'); }
+  @font-face { font-family: 'SF Pro Text'; src: local('SF Pro Text'); }
+  :root {
+    --black: #000000; --near-black: #1D1D1F; --gray-700: #424245; --gray-500: #6E6E73;
+    --gray-400: #86868B; --gray-200: #D2D2D7; --gray-100: #F5F5F7; --white: #FFFFFF;
+    --blue: #0071E3; --red: #FF3B30; --amber: #FF9F0A; --green: #30D158;
+    --display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    --text: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body { font-family: var(--text); color: var(--near-black); background: var(--black); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body.locked { overflow: hidden; }
+
+  /* GATE */
+  .gate-overlay { position:fixed; inset:0; z-index:9999; background:var(--black); display:flex; align-items:center; justify-content:center; flex-direction:column; transition: opacity .6s ease, visibility .6s ease; }
+  .gate-overlay.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+  .gate-logo { font-family:var(--display); font-size:48px; font-weight:700; color:var(--white); letter-spacing:3px; margin-bottom:8px; animation: gfi 1s ease forwards; }
+  .gate-sub { font-family:var(--text); font-size:14px; color:var(--gray-500); margin-bottom:48px; letter-spacing:1px; animation: gfi 1s ease .3s forwards; opacity:0; }
+  .gate-form { display:flex; flex-direction:column; align-items:center; gap:16px; animation: gfi 1s ease .6s forwards; opacity:0; }
+  .gate-input { width:280px; padding:14px 20px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:12px; font-family:var(--text); font-size:15px; color:var(--white); outline:none; text-align:center; letter-spacing:2px; transition: border-color .3s, background .3s; }
+  .gate-input::placeholder { color:var(--gray-500); letter-spacing:1px; font-size:13px; }
+  .gate-input:focus { border-color:var(--blue); background:rgba(255,255,255,.08); }
+  .gate-input.error { border-color:#FF3B30; animation: shake .4s ease; }
+  .gate-btn { width:280px; padding:14px 20px; background:var(--blue); border:none; border-radius:12px; font-family:var(--text); font-size:14px; font-weight:600; color:var(--white); cursor:pointer; letter-spacing:.5px; transition: background .3s, transform .15s; }
+  .gate-btn:hover { background:#0077ED; } .gate-btn:active { transform:scale(.97); }
+  .gate-error-msg { font-size:12px; color:#FF3B30; height:16px; font-family:var(--text); opacity:0; transition: opacity .3s; }
+  .gate-error-msg.show { opacity:1; }
+  .gate-spinner { width:24px; height:24px; border:2px solid rgba(255,255,255,.15); border-top-color:var(--blue); border-radius:50%; animation: spin .8s linear infinite; margin-bottom:16px; display:none; }
+  .gate-spinner.active { display:block; }
+  .gate-glow { position:absolute; width:400px; height:400px; border-radius:50%; filter:blur(100px); opacity:.06; pointer-events:none; }
+  .gate-glow-1 { background:var(--blue); top:-100px; right:-50px; } .gate-glow-2 { background:#00C2FF; bottom:-100px; left:-50px; }
+  @keyframes gfi { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 50%{transform:translateX(8px)} 75%{transform:translateX(-4px)} }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* SLIDES */
+  .slide { min-height:100vh; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .slide-inner { width:100%; max-width:1120px; padding:80px 60px; }
+  .dark { background:var(--near-black); color:var(--white); }
+  .dark .label { color:var(--gray-500); } .dark .body-lg,.dark .body-md { color:var(--gray-400); }
+  .light { background:var(--white); color:var(--near-black); }
+  .light .label { color:var(--gray-400); }
+  .alt { background:var(--gray-100); color:var(--near-black); }
+  .alt .label { color:var(--gray-400); }
+
+  /* REVEALS */
+  .reveal { opacity:0; transform:translateY(40px); transition: opacity .8s cubic-bezier(.25,.46,.45,.94), transform .8s cubic-bezier(.25,.46,.45,.94); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1{transition-delay:.15s} .reveal-delay-2{transition-delay:.3s} .reveal-delay-3{transition-delay:.45s}
+  .reveal-delay-4{transition-delay:.6s} .reveal-delay-5{transition-delay:.75s} .reveal-delay-6{transition-delay:.9s}
+  .reveal-scale { opacity:0; transform:scale(.92); transition: opacity .8s ease, transform .8s cubic-bezier(.25,.46,.45,.94); }
+  .reveal-scale.visible { opacity:1; transform:scale(1); }
+
+  /* TYPOGRAPHY */
+  .label { font-family:var(--text); font-size:13px; font-weight:600; letter-spacing:2px; text-transform:uppercase; margin-bottom:16px; }
+  .headline { font-family:var(--display); font-weight:700; line-height:1.08; letter-spacing:-.02em; }
+  .headline-xl { font-size:clamp(48px,6vw,72px); } .headline-lg { font-size:clamp(36px,4.5vw,56px); }
+  .headline-md { font-size:clamp(28px,3.5vw,40px); } .headline-sm { font-size:clamp(22px,2.5vw,30px); }
+  .body-lg { font-family:var(--text); font-size:19px; line-height:1.58; color:var(--gray-500); }
+  .body-md { font-family:var(--text); font-size:15px; line-height:1.6; color:var(--gray-500); }
+  .section-divider { width:32px; height:2px; background:var(--blue); margin:20px 0 28px; }
+
+  /* NAV */
+  .nav-dots { position:fixed; right:28px; top:50%; transform:translateY(-50%); z-index:100; display:flex; flex-direction:column; gap:8px; }
+  .nav-dot { width:8px; height:8px; border-radius:50%; background:var(--gray-500); opacity:.3; cursor:pointer; transition:all .3s; border:none; }
+  .nav-dot.active { opacity:1; background:var(--blue); transform:scale(1.3); } .nav-dot:hover { opacity:.7; }
+  .progress-bar { position:fixed; top:0; left:0; height:2px; background:var(--blue); z-index:200; transition:width .3s; }
+
+  /* LANG */
+  .lang-toggle { position:fixed; top:24px; right:28px; z-index:300; display:flex; background:rgba(255,255,255,.08); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:8px; border:1px solid rgba(255,255,255,.1); overflow:hidden; }
+  .lang-btn { padding:6px 14px; font-family:var(--text); font-size:12px; font-weight:600; letter-spacing:.5px; border:none; cursor:pointer; transition:all .3s; background:transparent; color:var(--gray-400); }
+  .lang-btn.active { background:var(--blue); color:var(--white); } .lang-btn:hover:not(.active) { color:var(--white); }
+
+  /* COVER */
+  .cover-glow { position:absolute; width:600px; height:600px; border-radius:50%; filter:blur(120px); opacity:.08; pointer-events:none; }
+  .cover-glow-1 { background:var(--blue); top:-200px; right:-100px; } .cover-glow-2 { background:#00C2FF; bottom:-200px; left:-100px; }
+  .cover-sub { font-family:var(--display); font-size:clamp(28px,3.5vw,44px); font-weight:400; color:var(--gray-400); margin-bottom:20px; }
+  .cover-desc { font-size:17px; color:var(--gray-500); margin-bottom:60px; }
+  .cover-meta { font-size:13px; color:var(--gray-500); }
+  .scroll-hint { position:absolute; bottom:32px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; animation:pulse-down 2s ease infinite; }
+  .scroll-hint span { font-size:11px; color:var(--gray-500); letter-spacing:1px; }
+  .scroll-arrow { width:20px; height:20px; border-right:1.5px solid var(--gray-500); border-bottom:1.5px solid var(--gray-500); transform:rotate(45deg); }
+  @keyframes pulse-down { 0%,100%{opacity:.4;transform:translateX(-50%) translateY(0)} 50%{opacity:1;transform:translateX(-50%) translateY(6px)} }
+
+  .slide-credit { position:absolute; bottom:28px; left:60px; font-family:var(--text); font-size:11px; letter-spacing:.5px; opacity:.35; }
+  .dark .slide-credit { color:var(--gray-400); } .light .slide-credit,.alt .slide-credit { color:var(--gray-500); }
+
+  /* FINDING CARDS */
+  .findings-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:24px; margin-top:40px; }
+  @media(max-width:768px){ .findings-grid{grid-template-columns:1fr;} }
+  .finding-card { padding:32px; border-radius:16px; transition:all .4s ease; }
+  .dark .finding-card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); }
+  .dark .finding-card:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.12); }
+  .light .finding-card,.alt .finding-card { background:var(--white); border:1px solid rgba(0,0,0,.04); box-shadow:0 2px 20px rgba(0,0,0,.04); }
+  .light .finding-card:hover,.alt .finding-card:hover { box-shadow:0 4px 30px rgba(0,0,0,.08); transform:translateY(-2px); }
+  .finding-label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px; }
+  .finding-title { font-family:var(--display); font-size:18px; font-weight:600; margin-bottom:10px; line-height:1.3; }
+  .finding-body { font-size:14px; line-height:1.6; }
+  .dark .finding-body { color:var(--gray-400); } .light .finding-body,.alt .finding-body { color:var(--gray-500); }
+
+  /* SEVERITY DOT */
+  .severity { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; vertical-align:middle; }
+  .severity-high { background:var(--red); } .severity-med { background:var(--amber); } .severity-low { background:var(--green); }
+
+  /* DIAGNOSIS */
+  .diagnosis-card { padding:40px; border-radius:16px; margin-top:24px; }
+  .dark .diagnosis-card { background:rgba(0,113,227,.08); border:1px solid rgba(0,113,227,.15); }
+  .light .diagnosis-card { background:rgba(0,113,227,.04); border:1px solid rgba(0,113,227,.1); }
+  .diagnosis-label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--blue); margin-bottom:8px; }
+  .diagnosis-text { font-family:var(--display); font-size:20px; font-weight:600; line-height:1.4; }
+
+  /* ASSET LIST */
+  .asset-item { padding:24px 0; border-bottom:1px solid rgba(128,128,128,.1); }
+  .dark .asset-item { border-color:rgba(255,255,255,.06); }
+  .asset-name { font-family:var(--display); font-size:17px; font-weight:600; margin-bottom:6px; }
+  .asset-issue { font-size:14px; line-height:1.6; }
+  .dark .asset-issue { color:var(--gray-400); } .light .asset-issue,.alt .asset-issue { color:var(--gray-500); }
+  .asset-rec { font-size:13px; color:var(--blue); margin-top:8px; font-weight:500; }
+
+  /* STRENGTHS */
+  .strength-item { display:flex; gap:20px; padding:20px 0; border-bottom:1px solid rgba(128,128,128,.08); align-items:flex-start; }
+  .strength-num { font-family:var(--display); font-size:28px; font-weight:700; color:var(--blue); min-width:40px; }
+  .strength-text { font-size:15px; line-height:1.6; }
+  .dark .strength-text { color:var(--gray-200); } .light .strength-text { color:var(--gray-700); }
+  .strength-title { font-family:var(--display); font-size:16px; font-weight:600; margin-bottom:4px; }
+
+  /* STRATEGY DIRECTION */
+  .strategy-item { padding:28px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+  .strategy-item:last-child { border-bottom:none; }
+  .strategy-label { font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--blue); margin-bottom:8px; }
+  .strategy-text { font-family:var(--display); font-size:clamp(18px,2vw,22px); font-weight:500; color:var(--white); line-height:1.4; }
+
+  /* REWRITE EXAMPLES */
+  .rewrite-card { padding:32px; border-radius:16px; margin-bottom:20px; }
+  .light .rewrite-card { background:var(--gray-100); }
+  .alt .rewrite-card { background:var(--white); }
+  .rewrite-label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:8px; }
+  .rewrite-label.before { color:var(--red); } .rewrite-label.after { color:var(--green); }
+  .rewrite-text { font-size:14px; line-height:1.6; font-style:italic; }
+  .dark .rewrite-text { color:var(--gray-300); } .light .rewrite-text,.alt .rewrite-text { color:var(--gray-700); }
+
+  /* BACK LINK */
+  .back-link { position:fixed; top:24px; left:28px; z-index:300; font-family:var(--text); font-size:12px; font-weight:600; color:var(--gray-400); text-decoration:none; letter-spacing:.5px; transition:color .3s; }
+  .back-link:hover { color:var(--blue); }
+  .back-link::before { content:'\2190'; margin-right:6px; }
+</style>
+</head>
+<body class="locked">
+
+<!-- PASSWORD GATE -->
+<div class="gate-overlay" id="gate">
+  <div class="gate-glow gate-glow-1"></div><div class="gate-glow gate-glow-2"></div>
+  <div class="gate-logo">EPAL</div>
+  <div class="gate-sub">Brand Audit — Confidential</div>
+  <div class="gate-spinner" id="gateSpinner"></div>
+  <form class="gate-form" id="gateForm" onsubmit="return checkPassword(event)">
+    <input class="gate-input" id="gateInput" type="password" placeholder="Enter password" autocomplete="off" autofocus>
+    <button class="gate-btn" type="submit">Access Audit</button>
+    <div class="gate-error-msg" id="gateError">Incorrect password</div>
+  </form>
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots"></nav>
+<a class="back-link" href="index.html" data-pt="Proposta" data-en="Proposal">Proposta</a>
+<div class="lang-toggle">
+  <button class="lang-btn active" id="btnPT" onclick="setLang('pt')">PT</button>
+  <button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ========== SLIDE 1: COVER ========== -->
+<section class="slide dark" id="slide-0">
+  <div class="cover-glow cover-glow-1"></div><div class="cover-glow cover-glow-2"></div>
+  <div class="slide-inner">
+    <div class="reveal headline headline-xl" style="color:var(--white);margin-bottom:12px;">EPAL</div>
+    <div class="reveal reveal-delay-1 cover-sub" data-pt="Auditoria de Marca" data-en="Brand Audit">Auditoria de Marca</div>
+    <div class="reveal reveal-delay-2 cover-desc" data-pt="Avaliação Estratégica & Criativa" data-en="Strategic & Creative Assessment">Avaliação Estratégica & Criativa</div>
+    <div class="reveal reveal-delay-3 cover-meta">By Pedro Gomes</div>
+    <div class="reveal reveal-delay-3 cover-meta" style="margin-top:8px;" data-pt="Abril 2026 &nbsp;|&nbsp; Confidencial" data-en="April 2026 &nbsp;|&nbsp; Confidential">Abril 2026 &nbsp;|&nbsp; Confidencial</div>
+  </div>
+  <div class="scroll-hint"><span data-pt="DESLIZAR" data-en="SCROLL">DESLIZAR</span><div class="scroll-arrow"></div></div>
+  <div class="slide-credit">Pedro Gomes</div>
+</section>
+
+<!-- ========== SLIDE 2: DIAGNOSIS ========== -->
+<section class="slide light" id="slide-1">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Diagnóstico Estratégico" data-en="Strategic Diagnosis">Diagnóstico Estratégico</div>
+    <h2 class="reveal reveal-delay-1 headline headline-lg" data-pt="A marca tem matéria-prima forte. Falta-lhe coerência." data-en="The brand has strong raw material. It lacks coherence.">A marca tem matéria-prima forte. Falta-lhe coerência.</h2>
+    <div class="section-divider reveal reveal-delay-2"></div>
+    <div class="reveal reveal-delay-2 diagnosis-card">
+      <div class="diagnosis-label" data-pt="Percepção Actual" data-en="Current Perception">Percepção Actual</div>
+      <div class="diagnosis-text" data-pt="Uma empresa pública de água que tenta modernizar-se mas continua a comunicar como uma burocracia." data-en="A government water company trying to go digital but still communicating like a bureaucracy.">Uma empresa pública de água que tenta modernizar-se mas continua a comunicar como uma burocracia.</div>
+    </div>
+    <div class="reveal reveal-delay-3 diagnosis-card">
+      <div class="diagnosis-label" data-pt="Percepção Ideal" data-en="Ideal Perception">Percepção Ideal</div>
+      <div class="diagnosis-text" data-pt="A marca de serviço mais essencial e respeitada de Angola — moderna, humana e indispensável." data-en="Angola's most essential and respected service brand — modern, human, and indispensable.">A marca de serviço mais essencial e respeitada de Angola — moderna, humana e indispensável.</div>
+    </div>
+    <div class="reveal reveal-delay-4 diagnosis-card">
+      <div class="diagnosis-label" data-pt="Problema Central" data-en="Core Problem">Problema Central</div>
+      <div class="diagnosis-text" data-pt="A EPAL trata a marca como um problema de comunicação, não de experiência. O resultado é fragmentação visual sobre uma identidade institucional inalterada." data-en="EPAL treats its brand as a communications problem, not an experience problem. The result is fragmented output layered on an unchanged institutional identity.">A EPAL trata a marca como um problema de comunicação, não de experiência. O resultado é fragmentação visual sobre uma identidade institucional inalterada.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SLIDE 3: VISUAL IDENTITY ========== -->
+<section class="slide dark" id="slide-2">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Identidade Visual" data-en="Visual Identity">Identidade Visual</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" style="color:var(--white);" data-pt="Fragmentada, inconsistente, sem sistema." data-en="Fragmented, inconsistent, no system.">Fragmentada, inconsistente, sem sistema.</h2>
+    <div class="findings-grid">
+      <div class="reveal reveal-scale reveal-delay-1 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Logótipo" data-en="Logo">Logótipo</span></div>
+        <div class="finding-body" data-pt="Emblema de era institucional — torre de água literal dentro de um brasão. Sem flexibilidade digital, sem ícone responsivo, sem sistema de marcas secundárias." data-en="Legacy-era emblem — literal water tower in a crest. No digital flexibility, no responsive icon, no secondary mark system.">Emblema de era institucional — torre de água literal dentro de um brasão. Sem flexibilidade digital, sem ícone responsivo, sem sistema de marcas secundárias.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-2 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Tipografia" data-en="Typography">Tipografia</span></div>
+        <div class="finding-body" data-pt="Múltiplos tipos de letra sem sistema. Cada material usa uma família diferente. A marca não tem voz tipográfica." data-en="Multiple typefaces with no system. Each material uses a different family. The brand has no typographic voice.">Múltiplos tipos de letra sem sistema. Cada material usa uma família diferente. A marca não tem voz tipográfica.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-3 finding-card">
+        <div class="finding-label"><span class="severity severity-med"></span> <span data-pt="Cor" data-en="Colour">Cor</span></div>
+        <div class="finding-body" data-pt="Azul institucional genérico sem hierarquia definida. Poderia pertencer a qualquer banco, telecomunicações ou ministério em África." data-en="Generic institutional blue with no defined hierarchy. Could belong to any bank, telecom, or ministry in Africa.">Azul institucional genérico sem hierarquia definida. Poderia pertencer a qualquer banco, telecomunicações ou ministério em África.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-4 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Consistência" data-en="Consistency">Consistência</span></div>
+        <div class="finding-body" data-pt="Os materiais representam pelo menos 4–5 linguagens visuais diferentes. Cada comunicação parece desenhada isoladamente, provavelmente por pessoas diferentes sem directrizes." data-en="Materials represent at least 4–5 different visual languages. Each piece appears designed in isolation, likely by different people with no guidelines.">Os materiais representam pelo menos 4–5 linguagens visuais diferentes. Cada comunicação parece desenhada isoladamente, provavelmente por pessoas diferentes sem directrizes.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes</div>
+</section>
+
+<!-- ========== SLIDE 4: MESSAGING & TONE ========== -->
+<section class="slide light" id="slide-3">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Mensagem & Tom de Voz" data-en="Messaging & Tone of Voice">Mensagem & Tom de Voz</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" data-pt="Quatro vozes. Nenhum tom unificado." data-en="Four voices. No unified tone.">Quatro vozes. Nenhum tom unificado.</h2>
+    <div class="section-divider reveal reveal-delay-2"></div>
+    <div class="findings-grid" style="grid-template-columns:1fr;">
+      <div class="reveal reveal-delay-2 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Inconsistência de Tom" data-en="Tone Inconsistency">Inconsistência de Tom</span></div>
+        <div class="finding-body" data-pt="A marca fala em pelo menos 4 vozes diferentes: ameaçadora (lembrete de pagamento), moderna-amigável (WhatsApp), burocrática (comunicados), e neutra-informativa (cadastro). Não existe um quadro de tom que governe tudo." data-en="The brand speaks in at least 4 different voices: threatening (bill reminder), friendly-modern (WhatsApp promo), bureaucratic (press release), and neutral-informational (registration). No governing tone framework exists.">A marca fala em pelo menos 4 vozes diferentes: ameaçadora (lembrete de pagamento), moderna-amigável (WhatsApp), burocrática (comunicados), e neutra-informativa (cadastro). Não existe um quadro de tom que governe tudo.</div>
+      </div>
+      <div class="reveal reveal-delay-3 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Fragmentação de Mensagem" data-en="Messaging Fragmentation">Fragmentação de Mensagem</span></div>
+        <div class="finding-body" data-pt="O poster do WhatsApp promove serviço digital, mas o lembrete de pagamento só menciona balcões físicos. O poster de métodos de pagamento lista 6 opções digitais que não são referenciadas no lembrete. A marca trabalha contra si mesma." data-en="The WhatsApp poster promotes digital service while the bill reminder only mentions physical counters. The payment methods poster lists 6 digital options not referenced in the bill reminder. The brand works against itself.">O poster do WhatsApp promove serviço digital, mas o lembrete de pagamento só menciona balcões físicos. O poster de métodos de pagamento lista 6 opções digitais que não são referenciadas no lembrete. A marca trabalha contra si mesma.</div>
+      </div>
+      <div class="reveal reveal-delay-4 finding-card">
+        <div class="finding-label"><span class="severity severity-med"></span> <span data-pt="Camada Emocional Ausente" data-en="Missing Emotional Layer">Camada Emocional Ausente</span></div>
+        <div class="finding-body" data-pt="Em todos os materiais, o texto é funcional ou institucional. Zero conexão emocional. Nenhuma referência ao que a água significa para a vida das pessoas. A marca comunica como uma máquina de venda automática." data-en="Across all assets, copy is either functional or institutional. Zero emotional connection. No reference to what water means to people's lives. The brand communicates like a vending machine.">Em todos os materiais, o texto é funcional ou institucional. Zero conexão emocional. Nenhuma referência ao que a água significa para a vida das pessoas. A marca comunica como uma máquina de venda automática.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SLIDE 5: MASCOT ========== -->
+<section class="slide dark" id="slide-4">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="A Menha — Oportunidade Perdida" data-en="Menha — Missed Opportunity">A Menha — Oportunidade Perdida</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" style="color:var(--white);" data-pt="Uma mascote sem voz é um figurino sem personagem." data-en="A mascot without a voice is a costume without a character.">Uma mascote sem voz é um figurino sem personagem.</h2>
+    <div class="section-divider reveal reveal-delay-2" style="background:var(--amber);"></div>
+    <p class="reveal reveal-delay-2 body-lg" style="max-width:700px;" data-pt="A Menha aparece em vários materiais mas nunca fala com uma voz consistente e definida. É um elemento visual, não verbal. Poucas utilidades no mundo têm uma personagem de marca — esta é uma vantagem genuína. Mas precisa de personalidade definida, execução visual consistente, e um papel estratégico no sistema de marca." data-en="Menha appears in multiple assets but never speaks in a consistent, defined voice. She is a visual element, not a verbal one. Few utilities globally have a branded character — this is a genuine advantage. But she needs a defined personality, consistent visual execution, and a strategic role in the brand system.">A Menha aparece em vários materiais mas nunca fala com uma voz consistente e definida. É um elemento visual, não verbal. Poucas utilidades no mundo têm uma personagem de marca — esta é uma vantagem genuína. Mas precisa de personalidade definida, execução visual consistente, e um papel estratégico no sistema de marca.</p>
+  </div>
+</section>
+
+<!-- ========== SLIDE 6: DIGITAL PRESENCE ========== -->
+<section class="slide light" id="slide-5">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Presença Digital" data-en="Digital Presence">Presença Digital</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" data-pt="Organizado por departamentos, não por pessoas." data-en="Organised by departments, not by people.">Organizado por departamentos, não por pessoas.</h2>
+    <div class="findings-grid">
+      <div class="reveal reveal-scale reveal-delay-2 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Navegação" data-en="Navigation">Navegação</span></div>
+        <div class="finding-body" data-pt="O website está organizado por estrutura interna (Institucional, Produção, RH) em vez de necessidades do cliente. Ninguém visita um site de água à procura de Recursos Humanos." data-en="The website is organised by internal structure (Institutional, Production, HR) rather than customer needs. No one visits a water company site looking for Human Resources.">O website está organizado por estrutura interna (Institucional, Produção, RH) em vez de necessidades do cliente. Ninguém visita um site de água à procura de Recursos Humanos.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-3 finding-card">
+        <div class="finding-label"><span class="severity severity-med"></span> <span data-pt="Mensagem Hero" data-en="Hero Messaging">Mensagem Hero</span></div>
+        <div class="finding-body" data-pt="«Servir com qualidade», «Cada vez mais e melhor» — genérico e esquecível. Poderia pertencer a qualquer empresa de qualquer sector." data-en="'Serve with quality', 'Ever more and better' — generic and forgettable. Could belong to any company in any sector.">«Servir com qualidade», «Cada vez mais e melhor» — genérico e esquecível. Poderia pertencer a qualquer empresa de qualquer sector.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-3 finding-card">
+        <div class="finding-label"><span class="severity severity-high"></span> <span data-pt="Sem CTA Claro" data-en="No Clear CTA">Sem CTA Claro</span></div>
+        <div class="finding-body" data-pt="Pagar factura, reportar problema, pedir ligação — tudo igualmente enterrado. Sem portal de self-service visível apesar de existirem canais digitais." data-en="Pay a bill, report an issue, request a connection — all equally buried. No visible self-service portal despite digital channels existing.">Pagar factura, reportar problema, pedir ligação — tudo igualmente enterrado. Sem portal de self-service visível apesar de existirem canais digitais.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-4 finding-card">
+        <div class="finding-label"><span class="severity severity-low"></span> <span data-pt="WhatsApp" data-en="WhatsApp">WhatsApp</span></div>
+        <div class="finding-body" data-pt="A decisão de construir um agente virtual no WhatsApp é inteligente para o mercado angolano. É uma vantagem real de UX — mas mal comunicada nos outros materiais." data-en="Building a WhatsApp virtual agent is smart for the Angolan market. It's a genuine UX advantage — but poorly communicated across other materials.">A decisão de construir um agente virtual no WhatsApp é inteligente para o mercado angolano. É uma vantagem real de UX — mas mal comunicada nos outros materiais.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SLIDE 7: STRENGTHS ========== -->
+<section class="slide dark" id="slide-6">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Pontos Fortes" data-en="Brand Strengths">Pontos Fortes</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" style="color:var(--white);" data-pt="O que preservar e evoluir." data-en="What to preserve and evolve.">O que preservar e evoluir.</h2>
+    <div style="margin-top:40px;">
+      <div class="reveal reveal-delay-1 strength-item"><div class="strength-num">1</div><div><div class="strength-title" style="color:var(--white);" data-pt="A Mascote «Menha»" data-en="The Mascot 'Menha'">A Mascote «Menha»</div><div class="strength-text" data-pt="Activo genuinamente distintivo. Poucas utilidades no mundo têm uma personagem de marca. Pode tornar-se icónica se devidamente desenvolvida." data-en="Genuinely distinctive asset. Few utilities globally have a branded character. Could become iconic if properly developed.">Activo genuinamente distintivo. Poucas utilidades no mundo têm uma personagem de marca. Pode tornar-se icónica se devidamente desenvolvida.</div></div></div>
+      <div class="reveal reveal-delay-2 strength-item"><div class="strength-num">2</div><div><div class="strength-title" style="color:var(--white);" data-pt="Serviço WhatsApp-First" data-en="WhatsApp-First Service">Serviço WhatsApp-First</div><div class="strength-text" data-pt="Vantagem real de UX sobre utilidades em mercados muito mais ricos. Inteligente para a penetração do WhatsApp em Angola." data-en="Genuine UX advantage over utilities in far wealthier markets. Smart for WhatsApp penetration in Angola.">Vantagem real de UX sobre utilidades em mercados muito mais ricos. Inteligente para a penetração do WhatsApp em Angola.</div></div></div>
+      <div class="reveal reveal-delay-3 strength-item"><div class="strength-num">3</div><div><div class="strength-title" style="color:var(--white);" data-pt="O Nome «EPAL»" data-en="The Name 'EPAL'">O Nome «EPAL»</div><div class="strength-text" data-pt="Curto, memorável, foneticamente forte. Tem capital em Angola. Não precisa de ser alterado." data-en="Short, memorable, phonetically strong. Has equity in Angola. No need to change it.">Curto, memorável, foneticamente forte. Tem capital em Angola. Não precisa de ser alterado.</div></div></div>
+      <div class="reveal reveal-delay-4 strength-item"><div class="strength-num">4</div><div><div class="strength-title" style="color:var(--white);" data-pt="Autoridade de Categoria" data-en="Category Authority">Autoridade de Categoria</div><div class="strength-text" data-pt="Como empresa nacional de água, a EPAL é dona da categoria por defeito. Isto dá-lhe permissão para liderar a narrativa da água em Angola." data-en="As the national water company, EPAL owns the category by default. This gives them permission to lead the water narrative in Angola.">Como empresa nacional de água, a EPAL é dona da categoria por defeito. Isto dá-lhe permissão para liderar a narrativa da água em Angola.</div></div></div>
+      <div class="reveal reveal-delay-5 strength-item" style="border:none;"><div class="strength-num">5</div><div><div class="strength-title" style="color:var(--white);" data-pt="O Território «Água é Vida»" data-en="The 'Water is Life' Territory">O Território «Água é Vida»</div><div class="strength-text" data-pt="Num mercado onde acesso a água limpa muda vidas genuinamente, isto não é cliché — é realidade vivida. A EPAL tem permissão autêntica para ser dona desta narrativa." data-en="In a market where access to clean water is genuinely life-changing, this isn't a cliché — it's lived reality. EPAL has authentic permission to own this narrative.">Num mercado onde acesso a água limpa muda vidas genuinamente, isto não é cliché — é realidade vivida. A EPAL tem permissão autêntica para ser dona desta narrativa.</div></div></div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes</div>
+</section>
+
+<!-- ========== SLIDE 8: COPY AUDIT HIGHLIGHTS ========== -->
+<section class="slide alt" id="slide-7">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Auditoria de Copy — Destaques" data-en="Copy Audit — Highlights">Auditoria de Copy — Destaques</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" data-pt="O que cada material comunica hoje." data-en="What each asset communicates today.">O que cada material comunica hoje.</h2>
+    <div style="margin-top:40px;">
+      <div class="reveal reveal-delay-1 asset-item">
+        <div class="asset-name" data-pt="Poster WhatsApp — Agência Virtual" data-en="WhatsApp Poster — Virtual Agent">Poster WhatsApp — Agência Virtual</div>
+        <div class="asset-issue" data-pt="Demasiadas mensagens concorrentes. «Rápido, fácil e em qualquer lugar» é genérico. A Menha aparece mas não tem voz própria." data-en="Too many competing messages. 'Fast, easy, anywhere' is generic. Menha appears but has no own voice.">Demasiadas mensagens concorrentes. «Rápido, fácil e em qualquer lugar» é genérico. A Menha aparece mas não tem voz própria.</div>
+        <div class="asset-rec" data-pt="→ Simplificar para um headline + dar voz à Menha" data-en="→ Simplify to one headline + give Menha a voice">→ Simplificar para um headline + dar voz à Menha</div>
+      </div>
+      <div class="reveal reveal-delay-2 asset-item">
+        <div class="asset-name" data-pt="Lembrete de Pagamento" data-en="Bill Payment Reminder">Lembrete de Pagamento</div>
+        <div class="asset-issue" data-pt="Lidera com ameaça: «Evite o corte!». Só oferece pagamento presencial apesar de existirem 6 opções digitais. A marca trabalha contra si mesma." data-en="Leads with threat: 'Avoid disconnection!' Only offers in-person payment despite 6 digital options existing. Brand works against itself.">Lidera com ameaça: «Evite o corte!». Só oferece pagamento presencial apesar de existirem 6 opções digitais. A marca trabalha contra si mesma.</div>
+        <div class="asset-rec" data-pt="→ Reformular de ameaça para conveniência" data-en="→ Reframe from threat to convenience">→ Reformular de ameaça para conveniência</div>
+      </div>
+      <div class="reveal reveal-delay-3 asset-item">
+        <div class="asset-name" data-pt="Comunicado de Imprensa" data-en="Press Release">Comunicado de Imprensa</div>
+        <div class="asset-issue" data-pt="Linguagem escrita para comissões de aprovação interna, não para as pessoas. Informação crítica enterrada em parágrafos densos. Zero empatia." data-en="Language written for internal approval committees, not for people. Critical information buried in dense paragraphs. Zero empathy.">Linguagem escrita para comissões de aprovação interna, não para as pessoas. Informação crítica enterrada em parágrafos densos. Zero empatia.</div>
+        <div class="asset-rec" data-pt="→ Template: área + hora primeiro, razão segundo, ajuda terceiro" data-en="→ Template: area + time first, reason second, help third">→ Template: área + hora primeiro, razão segundo, ajuda terceiro</div>
+      </div>
+      <div class="reveal reveal-delay-4 asset-item">
+        <div class="asset-name" data-pt="Website (epal.co.ao)" data-en="Website (epal.co.ao)">Website (epal.co.ao)</div>
+        <div class="asset-issue" data-pt="Navegação por departamentos internos, não por tarefas do cliente. Mensagens hero genéricas. Sem CTA primário claro." data-en="Navigation by internal departments, not customer tasks. Generic hero messaging. No clear primary CTA.">Navegação por departamentos internos, não por tarefas do cliente. Mensagens hero genéricas. Sem CTA primário claro.</div>
+        <div class="asset-rec" data-pt="→ Reestruturar: Pagar, Reportar, Ligar, Saber" data-en="→ Restructure: Pay, Report, Connect, Learn">→ Reestruturar: Pagar, Reportar, Ligar, Saber</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SLIDE 9: REWRITE EXAMPLES ========== -->
+<section class="slide light" id="slide-8">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Antes & Depois" data-en="Before & After">Antes & Depois</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" data-pt="Como a copy deve soar." data-en="How the copy should sound.">Como a copy deve soar.</h2>
+    <div style="margin-top:40px;">
+      <div class="reveal reveal-delay-2">
+        <p class="body-md" style="margin-bottom:12px;font-weight:600;color:var(--near-black);" data-pt="Lembrete de Pagamento" data-en="Bill Payment Reminder">Lembrete de Pagamento</p>
+        <div class="rewrite-card">
+          <div class="rewrite-label before" data-pt="ANTES" data-en="BEFORE">ANTES</div>
+          <div class="rewrite-text" data-pt="«Estimado Cliente, já pagou a sua factura do consumo de água? Se ainda não, dirija-se aos balcões das agências comerciais... Evite o corte do abastecimento de água!»" data-en="'Dear Customer, have you paid your water bill? If not, visit commercial agency counters... Avoid having your water cut off!'">«Estimado Cliente, já pagou a sua factura do consumo de água? Se ainda não, dirija-se aos balcões das agências comerciais... Evite o corte do abastecimento de água!»</div>
+        </div>
+        <div class="rewrite-card">
+          <div class="rewrite-label after" data-pt="DEPOIS" data-en="AFTER">DEPOIS</div>
+          <div class="rewrite-text" data-pt="«A sua conta de água está disponível. Pague pelo WhatsApp, multibanco, ou qualquer uma das 6 formas digitais — sem filas, sem deslocações. Precisa de ajuda? Fale com a Menha: 949 366 262.»" data-en="'Your water bill is available. Pay via WhatsApp, ATM, or any of 6 digital methods — no queues, no travel. Need help? Talk to Menha: 949 366 262.'">«A sua conta de água está disponível. Pague pelo WhatsApp, multibanco, ou qualquer uma das 6 formas digitais — sem filas, sem deslocações. Precisa de ajuda? Fale com a Menha: 949 366 262.»</div>
+        </div>
+      </div>
+      <div class="reveal reveal-delay-3" style="margin-top:32px;">
+        <p class="body-md" style="margin-bottom:12px;font-weight:600;color:var(--near-black);" data-pt="Aviso de Interrupção" data-en="Service Disruption Notice">Aviso de Interrupção</p>
+        <div class="rewrite-card">
+          <div class="rewrite-label before" data-pt="ANTES" data-en="BEFORE">ANTES</div>
+          <div class="rewrite-text" data-pt="«A Empresa Pública de Águas, EPAL E.P. comunica aos estimados clientes e público em geral, que vai proceder à paralisação da Estação de Tratamento de Água do Kifuxi...»" data-en="'The Public Water Company, EPAL E.P. communicates to esteemed customers and the general public that it will proceed with the shutdown of the Kifuxi Water Treatment Station...'">«A Empresa Pública de Águas, EPAL E.P. comunica aos estimados clientes e público em geral, que vai proceder à paralisação da Estação de Tratamento de Água do Kifuxi...»</div>
+        </div>
+        <div class="rewrite-card">
+          <div class="rewrite-label after" data-pt="DEPOIS" data-en="AFTER">DEPOIS</div>
+          <div class="rewrite-text" data-pt="«Obras na sua zona — 25 de Maio, 8h–18h. Vamos melhorar a Estação do Kifuxi para garantir água de melhor qualidade. Lamentamos o incómodo. Dúvidas? Ligue 923 163 333.»" data-en="'Works in your area — May 25, 8am–6pm. We're improving the Kifuxi Station to ensure better water quality. We apologise for the inconvenience. Questions? Call 923 163 333.'">«Obras na sua zona — 25 de Maio, 8h–18h. Vamos melhorar a Estação do Kifuxi para garantir água de melhor qualidade. Lamentamos o incómodo. Dúvidas? Ligue 923 163 333.»</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes</div>
+</section>
+
+<!-- ========== SLIDE 10: STRATEGIC DIRECTION ========== -->
+<section class="slide dark" id="slide-9">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Direcção Estratégica" data-en="Strategic Direction">Direcção Estratégica</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" style="color:var(--white);margin-bottom:40px;" data-pt="Para onde a marca deve ir." data-en="Where the brand should go.">Para onde a marca deve ir.</h2>
+    <div class="reveal reveal-delay-2 strategy-item">
+      <div class="strategy-label" data-pt="Personalidade" data-en="Personality">Personalidade</div>
+      <div class="strategy-text" data-pt="Estável. Calorosa mas competente. Orgulhosamente Angolana. Progressiva — modernização ao serviço das pessoas, não da estética." data-en="Steady. Warm but competent. Proudly Angolan. Progressive — modernisation in service of people, not aesthetics.">Estável. Calorosa mas competente. Orgulhosamente Angolana. Progressiva — modernização ao serviço das pessoas, não da estética.</div>
+    </div>
+    <div class="reveal reveal-delay-3 strategy-item">
+      <div class="strategy-label" data-pt="Tom de Voz" data-en="Tone of Voice">Tom de Voz</div>
+      <div class="strategy-text" data-pt="Falar como um vizinho de confiança que gere infraestrutura crítica — não como um departamento governamental a ler um memorando." data-en="Talk like a trusted neighbour who happens to run critical infrastructure — not like a government department reading a memo.">Falar como um vizinho de confiança que gere infraestrutura crítica — não como um departamento governamental a ler um memorando.</div>
+    </div>
+    <div class="reveal reveal-delay-4 strategy-item">
+      <div class="strategy-label" data-pt="Direcção Visual" data-en="Visual Direction">Direcção Visual</div>
+      <div class="strategy-text" data-pt="Evoluir o azul para uma paleta sofisticada. Adicionar tons quentes angolanos. A Menha torna-se o rosto da marca. Água como linguagem de design — não gotas literais." data-en="Evolve blue into a sophisticated palette. Add warm Angolan tones. Menha becomes the brand's face. Water as design language — not literal drops.">Evoluir o azul para uma paleta sofisticada. Adicionar tons quentes angolanos. A Menha torna-se o rosto da marca. Água como linguagem de design — não gotas literais.</div>
+    </div>
+    <div class="reveal reveal-delay-5 strategy-item">
+      <div class="strategy-label" data-pt="Posicionamento" data-en="Positioning">Posicionamento</div>
+      <div class="strategy-text" data-pt="Para cada angolano que depende de água para viver, trabalhar e crescer, a EPAL é o serviço que torna a vida moderna em Angola possível." data-en="For every Angolan who depends on water to live, work, and grow, EPAL is the service that makes modern life in Angola possible.">Para cada angolano que depende de água para viver, trabalhar e crescer, a EPAL é o serviço que torna a vida moderna em Angola possível.</div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes</div>
+</section>
+
+<!-- ========== SLIDE 11: WHAT MOST MISS ========== -->
+<section class="slide light" id="slide-10">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="O Que Falta à Maioria dos Rebrands" data-en="What Most Rebrands Miss">O Que Falta à Maioria dos Rebrands</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" data-pt="Pensamento estratégico que eleva o trabalho." data-en="Strategic thinking that elevates the work.">Pensamento estratégico que eleva o trabalho.</h2>
+    <div class="findings-grid" style="margin-top:40px;">
+      <div class="reveal reveal-scale reveal-delay-1 finding-card">
+        <div class="finding-title" data-pt="A Factura É a Marca" data-en="The Bill Is the Brand">A Factura É a Marca</div>
+        <div class="finding-body" data-pt="Para a maioria dos clientes, a factura mensal é a principal interacção com a marca. Redesenhá-la é uma das intervenções de maior impacto possível." data-en="For most customers, the monthly bill is their primary brand interaction. Redesigning it is one of the highest-impact interventions possible.">Para a maioria dos clientes, a factura mensal é a principal interacção com a marca. Redesenhá-la é uma das intervenções de maior impacto possível.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-2 finding-card">
+        <div class="finding-title" data-pt="Relevância Cultural" data-en="Cultural Relevance">Relevância Cultural</div>
+        <div class="finding-body" data-pt="O rebrand deve ser inconfundivelmente Angolano — inspirado na arte, padrão, cor e energia de Angola. Não em Lisboa ou Londres." data-en="The rebrand should be unmistakably Angolan — drawn from Angolan art, pattern, colour, and energy. Not Lisbon or London.">O rebrand deve ser inconfundivelmente Angolano — inspirado na arte, padrão, cor e energia de Angola. Não em Lisboa ou Londres.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-3 finding-card">
+        <div class="finding-title" data-pt="Adopção Interna" data-en="Internal Adoption">Adopção Interna</div>
+        <div class="finding-body" data-pt="Um rebrand que só muda comunicações externas falha em 18 meses. As pessoas que atendem telefones e visitam casas SÃO a marca." data-en="A rebrand that only changes external communications will fail within 18 months. The people who answer phones and visit homes ARE the brand.">Um rebrand que só muda comunicações externas falha em 18 meses. As pessoas que atendem telefones e visitam casas SÃO a marca.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-4 finding-card">
+        <div class="finding-title" data-pt="Branding Sensorial" data-en="Sensory Branding">Branding Sensorial</div>
+        <div class="finding-body" data-pt="Identidade sonora, experiência espacial nos escritórios, até perfil olfactivo. Estes detalhes separam marcas boas de marcas icónicas." data-en="Sonic identity, spatial experience in offices, even scent profile. These details separate good brands from iconic ones.">Identidade sonora, experiência espacial nos escritórios, até perfil olfactivo. Estes detalhes separam marcas boas de marcas icónicas.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SLIDE 12: CLOSING ========== -->
+<section class="slide dark" id="slide-11">
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal headline headline-lg" style="color:var(--white);margin-bottom:24px;" data-pt="A EPAL tem tudo para ser<br>uma marca extraordinária." data-en="EPAL has everything to become<br>an extraordinary brand.">A EPAL tem tudo para ser<br>uma marca extraordinária.</div>
+    <div class="section-divider reveal reveal-delay-1" style="margin:0 auto 28px;"></div>
+    <p class="reveal reveal-delay-2 body-lg" style="max-width:600px;margin:0 auto 48px;" data-pt="O que falta é coerência, ambição e um centro de gravidade estratégico. Este rebrand deve redefinir como a EPAL pensa sobre si mesma." data-en="What it lacks is coherence, ambition, and a strategic centre of gravity. This rebrand should redefine how EPAL thinks about itself.">O que falta é coerência, ambição e um centro de gravidade estratégico. Este rebrand deve redefinir como a EPAL pensa sobre si mesma.</p>
+    <div class="reveal reveal-delay-3" style="background:var(--near-black);display:inline-block;padding:28px 36px;border-radius:16px;border:1px solid rgba(255,255,255,.08);">
+      <div style="font-size:15px;color:var(--white);font-weight:500;margin-bottom:4px;">Pedro Gomes — Creative Director & Strategist</div>
+      <div style="font-size:13px;color:var(--gray-500);">hello@pedraw.co.uk &nbsp;|&nbsp; +44 7756 440505</div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes — Creative Director & Strategist</div>
+</section>
+
+<script>
+// ---- PASSWORD ----
+function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrand'){f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
+
+// ---- LANG ----
+let currentLang='pt';
+function setLang(l){currentLang=l;document.documentElement.lang=l;document.title=l==='pt'?'EPAL — Auditoria de Marca':'EPAL — Brand Audit';document.getElementById('btnPT').classList.toggle('active',l==='pt');document.getElementById('btnEN').classList.toggle('active',l==='en');document.querySelectorAll('[data-'+l+']').forEach(el=>{el.innerHTML=el.getAttribute('data-'+l);});}
+
+// ---- REVEALS ----
+const obs=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible');});},{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal,.reveal-scale').forEach(el=>obs.observe(el));
+
+// ---- NAV ----
+const slides=document.querySelectorAll('.slide'),navDots=document.getElementById('navDots'),progressBar=document.getElementById('progressBar');
+slides.forEach((_,i)=>{const d=document.createElement('button');d.className='nav-dot';d.onclick=()=>slides[i].scrollIntoView({behavior:'smooth'});navDots.appendChild(d);});
+const dots=document.querySelectorAll('.nav-dot');
+new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){const i=Array.from(slides).indexOf(en.target);dots.forEach((d,j)=>d.classList.toggle('active',j===i));}});},{threshold:.5}).observe(slides[0]);
+slides.forEach(s=>new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){const i=Array.from(slides).indexOf(en.target);dots.forEach((d,j)=>d.classList.toggle('active',j===i));}});},{threshold:.5}).observe(s));
+
+window.addEventListener('scroll',()=>{const p=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(p>0?(window.scrollY/p)*100:0)+'%';});
+
+// ---- SCROLL HINT ----
+const sh=document.querySelector('.scroll-hint');let scrolled=false;
+window.addEventListener('scroll',()=>{if(!scrolled&&window.scrollY>100){scrolled=true;sh.style.transition='opacity .5s';sh.style.opacity='0';setTimeout(()=>sh.style.display='none',500);}});
+
+// ---- KEYBOARD ----
+let cur=0;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key===' '||e.key==='PageDown'){e.preventDefault();cur=Math.min(cur+1,slides.length-1);slides[cur].scrollIntoView({behavior:'smooth'});}else if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();cur=Math.max(cur-1,0);slides[cur].scrollIntoView({behavior:'smooth'});}});
+new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)cur=Array.from(slides).indexOf(en.target);});},{threshold:.5}).observe(slides[0]);
+slides.forEach(s=>new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)cur=Array.from(slides).indexOf(en.target);});},{threshold:.5}).observe(s));
+</script>
+</body>
+</html>
