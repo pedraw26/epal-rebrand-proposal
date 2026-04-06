@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EPAL — Rebrand Hub</title>
+<title>epal — Rebrand Hub</title>
 <style>
   @font-face{font-family:'SF Pro Display';src:local('SF Pro Display')}
   @font-face{font-family:'SF Pro Text';src:local('SF Pro Text')}
@@ -92,7 +92,7 @@
 <body class="locked">
 
 <!-- GATE -->
-<div class="gate-overlay" id="gate">  <div class="gate-logo">EPAL</div>
+<div class="gate-overlay" id="gate">  <div class="gate-logo">epal</div>
   <div class="gate-sub" data-pt="Projecto de Rebrand — Confidencial" data-en="Rebrand Project — Confidential">Projecto de Rebrand — Confidencial</div>
   <div class="gate-spinner" id="gateSpinner"></div>
   <form class="gate-form" id="gateForm" onsubmit="return checkPassword(event)">
@@ -106,7 +106,7 @@
 
 <div class="hub">
   <div class="hub-header">
-    <h1 class="hub-title" data-pt="EPAL © Rebrand Hub" data-en="EPAL © Rebrand Hub">EPAL © Rebrand Hub</h1>
+    <h1 class="hub-title" data-pt="epal © Rebrand Hub" data-en="epal © Rebrand Hub">epal © Rebrand Hub</h1>
     <p class="hub-sub">Pedro Gomes · <span data-pt="Abril 2026" data-en="April 2026">Abril 2026</span> · <span data-pt="Confidencial" data-en="Confidential">Confidencial</span></p>
   </div>
 
@@ -115,7 +115,7 @@
       <div class="bento-num">01</div>
       <div class="bento-label live">LIVE</div>
       <div class="bento-title" data-pt="Auditoria de Marca" data-en="Brand Audit">Auditoria de Marca</div>
-      <div class="bento-desc" data-pt="Avaliação completa da identidade visual, verbal, digital e posicionamento actual da EPAL." data-en="Full assessment of visual, verbal, digital identity and current positioning of EPAL.">Avaliação completa da identidade visual, verbal, digital e posicionamento actual da EPAL.</div>
+      <div class="bento-desc" data-pt="Avaliação completa da identidade visual, verbal, digital e posicionamento actual da epal." data-en="Full assessment of visual, verbal, digital identity and current positioning of epal.">Avaliação completa da identidade visual, verbal, digital e posicionamento actual da epal.</div>
     </a>
     <a class="bento-card side" href="landscape.html">
       <div class="bento-label live">LIVE</div>
@@ -152,7 +152,7 @@
 if(sessionStorage.getItem('epal_auth')==='true'){document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');}
 function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrand'){sessionStorage.setItem('epal_auth','true');f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
 let currentLang='pt';
-function setLang(l){currentLang=l;document.documentElement.lang=l;document.title=l==='pt'?'EPAL — Hub do Rebrand':'EPAL — Rebrand Hub';document.getElementById('btnPT').classList.toggle('active',l==='pt');document.getElementById('btnEN').classList.toggle('active',l==='en');document.querySelectorAll('[data-'+l+']').forEach(el=>{el.innerHTML=el.getAttribute('data-'+l);});}
+function setLang(l){currentLang=l;document.documentElement.lang=l;document.title=l==='pt'?'epal — Hub do Rebrand':'epal — Rebrand Hub';document.getElementById('btnPT').classList.toggle('active',l==='pt');document.getElementById('btnEN').classList.toggle('active',l==='en');document.querySelectorAll('[data-'+l+']').forEach(el=>{el.innerHTML=el.getAttribute('data-'+l);});}
 </script>
 </body>
 </html>

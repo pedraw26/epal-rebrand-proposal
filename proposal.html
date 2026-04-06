@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EPAL — Proposta de Rebrand</title>
+<title>epal — Proposta de Rebrand</title>
 <style>
   @font-face { font-family: 'SF Pro Display'; src: local('SF Pro Display'); }
   @font-face { font-family: 'SF Pro Text'; src: local('SF Pro Text'); }
@@ -249,7 +249,7 @@
 
 <!-- PASSWORD GATE -->
 <div class="gate-overlay" id="gate">
-  <div class="gate-logo">EPAL</div>
+  <div class="gate-logo">epal</div>
   <div class="gate-sub">Confidential Proposal</div>
   <div class="gate-spinner" id="gateSpinner"></div>
   <form class="gate-form" id="gateForm" onsubmit="return checkPassword(event)">
@@ -273,7 +273,7 @@
 <!-- SLIDE 1: COVER -->
 <section class="slide dark" id="slide-0">
   <div class="slide-inner">
-    <div class="reveal cover-title headline headline-xl" style="color:var(--white);">EPAL</div>
+    <div class="reveal cover-title headline headline-xl" style="color:var(--white);">epal</div>
     <div class="reveal reveal-delay-1 cover-sub" data-pt="Proposta de Rebrand" data-en="Rebrand Proposal">Proposta de Rebrand</div>
     <div class="reveal reveal-delay-2 cover-desc" data-pt="Investimento Comercial & Roadmap do Projecto" data-en="Commercial Investment & Project Roadmap">Investimento Comercial & Roadmap do Projecto</div>
     <div class="reveal reveal-delay-3 cover-meta">By Pedro Gomes</div>
@@ -287,7 +287,7 @@
 <section class="slide light" id="slide-1">
   <div class="slide-inner">
     <div class="reveal label" data-pt="A Oportunidade" data-en="The Opportunity">A Oportunidade</div>
-    <h2 class="reveal reveal-delay-1 headline headline-lg" data-pt="Transformar a EPAL de uma empresa institucional numa marca de serviço moderna e respeitada em Angola." data-en="Transform EPAL from an institutional company into a modern, respected service brand in Angola.">Transformar a EPAL de uma empresa institucional numa marca de serviço moderna e respeitada em Angola.</h2>
+    <h2 class="reveal reveal-delay-1 headline headline-lg" data-pt="Transformar a epal de uma empresa institucional numa marca de serviço moderna e respeitada em Angola." data-en="Transform epal from an institutional company into a modern, respected service brand in Angola.">Transformar a epal de uma empresa institucional numa marca de serviço moderna e respeitada em Angola.</h2>
 
     <p class="reveal reveal-delay-3 body-lg" style="max-width:640px;" data-pt="A marca actual está fragmentada em todos os pontos de contacto — identidade visual, mensagem, presença digital. Isto não é cosmético. É transformação estratégica." data-en="The current brand is fragmented across every touchpoint — visual identity, messaging, digital presence. This isn't cosmetic. It's strategic transformation.">A marca actual está fragmentada em todos os pontos de contacto — identidade visual, mensagem, presença digital. Isto não é cosmético. É transformação estratégica.</p>
   </div>
@@ -645,7 +645,7 @@ let currentLang = 'pt';
 function setLang(lang) {
   currentLang = lang;
   document.documentElement.lang = lang;
-  document.title = lang === 'pt' ? 'EPAL — Proposta de Rebrand' : 'EPAL — Rebrand Proposal';
+  document.title = lang === 'pt' ? 'epal — Proposta de Rebrand' : 'epal — Rebrand Proposal';
   document.getElementById('btnPT').classList.toggle('active', lang === 'pt');
   document.getElementById('btnEN').classList.toggle('active', lang === 'en');
   document.querySelectorAll('[data-' + lang + ']').forEach(el => {
