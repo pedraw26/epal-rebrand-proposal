@@ -7,13 +7,13 @@
 <style>
   @font-face{font-family:'SF Pro Display';src:local('SF Pro Display')}
   @font-face{font-family:'SF Pro Text';src:local('SF Pro Text')}
-  :root{--black:#000;--near-black:#1D1D1F;--gray-700:#424245;--gray-500:#6E6E73;--gray-400:#86868B;--gray-200:#D2D2D7;--gray-100:#F5F5F7;--white:#FFF;--blue:#0071E3;
-    --display:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;--text:'SF Pro Text',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif}
+  :root{--black:#000;--near-black:#1D1D1F;--gray-600:#48484A;--gray-500:#6E6E73;--gray-400:#86868B;--gray-200:#D2D2D7;--gray-100:#F5F5F7;--white:#FFF;--blue:#0071E3;
+    --display:'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif;--text:'SF Pro Text',-apple-system,BlinkMacSystemFont,sans-serif}
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
-  body{font-family:var(--text);background:var(--black);color:var(--white);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow-x:hidden}
+  body{font-family:var(--text);background:var(--near-black);color:var(--white);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
   body.locked{overflow:hidden}
 
+  /* GATE */
   .gate-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .6s,visibility .6s}
   .gate-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
   .gate-logo{font-family:var(--display);font-size:48px;font-weight:700;color:var(--white);letter-spacing:3px;margin-bottom:8px;animation:gfi 1s ease forwards}
@@ -33,50 +33,67 @@
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
   @keyframes spin{to{transform:rotate(360deg)}}
 
-  .hub{width:100%;max-width:900px;padding:80px 40px}
-
-  .hub-header{margin-bottom:64px;animation:gfi 1s ease forwards}
-  .hub-title{font-family:var(--display);font-size:clamp(48px,6vw,64px);font-weight:700;letter-spacing:-0.02em;margin-bottom:8px}
-  .hub-sub{font-family:var(--display);font-size:clamp(24px,3vw,32px);font-weight:400;color:var(--gray-400);margin-bottom:16px}
-  .hub-meta{font-size:13px;color:var(--gray-500)}
-
-  .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  @media(max-width:640px){.hub-grid{grid-template-columns:1fr}}
-
-  .hub-card{display:block;padding:36px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);text-decoration:none;transition:all .4s ease;opacity:0;transform:translateY(30px);animation:card-in .6s ease forwards}
-  .hub-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);transform:translateY(-4px)}
-  .hub-card:nth-child(1){animation-delay:.3s}
-  .hub-card:nth-child(2){animation-delay:.45s}
-  .hub-card:nth-child(3){animation-delay:.6s}
-  .hub-card:nth-child(4){animation-delay:.75s}
-  .hub-card:nth-child(5){animation-delay:.9s}
-  .hub-card:nth-child(6){animation-delay:1.05s}
-  @keyframes card-in{to{opacity:1;transform:translateY(0)}}
-
-  .hub-card-num{font-family:var(--display);font-size:32px;font-weight:700;color:var(--blue);margin-bottom:12px}
-  .hub-card-title{font-family:var(--display);font-size:18px;font-weight:600;color:var(--white);margin-bottom:6px}
-  .hub-card-desc{font-size:13px;color:var(--gray-400);line-height:1.5}
-  .hub-card-status{display:inline-block;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-top:12px}
-  .status-live{background:rgba(48,209,88,.12);color:#30D158}
-  .status-soon{background:rgba(255,159,10,.1);color:#FF9F0A}
-
-  .hub-footer{margin-top:64px;padding-top:32px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;animation:gfi 1s ease 1.2s forwards;opacity:0}
-  .hub-footer-name{font-size:14px;color:var(--white);font-weight:500}
-  .hub-footer-contact{font-size:12px;color:var(--gray-500)}
-
+  /* LANG */
   .lang-toggle{position:fixed;top:24px;right:28px;z-index:300;display:flex;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border-radius:8px;border:1px solid rgba(255,255,255,.1);overflow:hidden}
   .lang-btn{padding:6px 14px;font-family:var(--text);font-size:12px;font-weight:600;letter-spacing:.5px;border:none;cursor:pointer;transition:all .3s;background:transparent;color:var(--gray-400)}
   .lang-btn.active{background:var(--blue);color:var(--white)}.lang-btn:hover:not(.active){color:var(--white)}
 
+  /* GLOWS */
   .hub-glow{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(120px);opacity:.05;pointer-events:none}
   .hub-glow-1{background:var(--blue);top:-150px;right:-100px}
   .hub-glow-2{background:#00C2FF;bottom:-150px;left:-100px}
+
+  /* BENTO HUB */
+  .hub{max-width:1080px;width:100%}
+
+  .hub-header{text-align:center;margin-bottom:56px;animation:gfi .8s ease forwards}
+  .hub-title{font-family:var(--display);font-size:clamp(40px,5vw,56px);font-weight:700;letter-spacing:-.02em}
+  .hub-sub{font-size:15px;color:var(--gray-400);margin-top:8px}
+
+  .bento{display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:auto;gap:16px}
+
+  .bento-card{border-radius:20px;padding:32px;text-decoration:none;color:inherit;transition:all .4s;position:relative;overflow:hidden;opacity:0;transform:scale(.95);animation:bentoIn .5s ease forwards}
+  .bento-card:hover{transform:scale(1.02)}
+
+  .bento-card.feature{grid-column:span 8;grid-row:span 2;background:linear-gradient(135deg,#0A1628 0%,#0D2137 100%);border:1px solid rgba(0,113,227,.15);min-height:280px;display:flex;flex-direction:column;justify-content:flex-end}
+  .bento-card.feature:hover{border-color:rgba(0,113,227,.3)}
+  .bento-card.feature .bento-num{font-size:64px;color:rgba(0,113,227,.2);position:absolute;top:24px;right:32px;font-family:var(--display);font-weight:700}
+
+  .bento-card.side{grid-column:span 4;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+  .bento-card.side:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+
+  .bento-card.medium{grid-column:span 4;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
+  .bento-card.medium:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12)}
+
+  .bento-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+  .bento-label.live{color:#30D158}.bento-label.soon{color:#FF9F0A}
+  .bento-title{font-family:var(--display);font-size:22px;font-weight:600;margin-bottom:6px;line-height:1.2}
+  .bento-desc{font-size:13px;color:var(--gray-400);line-height:1.5}
+
+  .feature .bento-title{font-size:32px}
+  .feature .bento-desc{font-size:15px;max-width:400px}
+
+  .bento-card:nth-child(1){animation-delay:.3s}.bento-card:nth-child(2){animation-delay:.4s}
+  .bento-card:nth-child(3){animation-delay:.5s}.bento-card:nth-child(4){animation-delay:.6s}
+  .bento-card:nth-child(5){animation-delay:.7s}.bento-card:nth-child(6){animation-delay:.8s}
+
+  @keyframes bentoIn{to{opacity:1;transform:scale(1)}}
+
+  .hub-footer{text-align:center;margin-top:48px;font-size:12px;color:var(--gray-500);animation:gfi 1s ease 1s forwards;opacity:0}
+
+  @media(max-width:768px){
+    .bento{grid-template-columns:1fr}
+    .bento-card.feature,.bento-card.side,.bento-card.medium{grid-column:span 1;grid-row:span 1}
+    body{padding:24px}
+  }
 </style>
 </head>
 <body class="locked">
 
+<!-- GATE -->
 <div class="gate-overlay" id="gate"><div class="gate-glow gate-glow-1"></div><div class="gate-glow gate-glow-2"></div>
-  <div class="gate-logo">EPAL</div><div class="gate-sub" data-pt="Projecto de Rebrand — Confidencial" data-en="Rebrand Project — Confidential">Projecto de Rebrand — Confidencial</div>
+  <div class="gate-logo">EPAL</div>
+  <div class="gate-sub" data-pt="Projecto de Rebrand — Confidencial" data-en="Rebrand Project — Confidential">Projecto de Rebrand — Confidencial</div>
   <div class="gate-spinner" id="gateSpinner"></div>
   <form class="gate-form" id="gateForm" onsubmit="return checkPassword(event)">
     <input class="gate-input" id="gateInput" type="password" placeholder="Enter password" autocomplete="off" autofocus>
@@ -86,59 +103,49 @@
 </div>
 
 <div class="hub-glow hub-glow-1"></div><div class="hub-glow hub-glow-2"></div>
-
 <div class="lang-toggle"><button class="lang-btn active" id="btnPT" onclick="setLang('pt')">PT</button><button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button></div>
 
 <div class="hub">
   <div class="hub-header">
-    <div class="hub-title">EPAL</div>
-    <div class="hub-sub" data-pt="Projecto de Rebrand" data-en="Rebrand Project">Projecto de Rebrand</div>
-    <div class="hub-meta">By Pedro Gomes &nbsp;·&nbsp; <span data-pt="Abril 2026" data-en="April 2026">Abril 2026</span></div>
+    <h1 class="hub-title">EPAL Rebrand</h1>
+    <p class="hub-sub">Pedro Gomes · <span data-pt="Abril 2026" data-en="April 2026">Abril 2026</span> · <span data-pt="Confidencial" data-en="Confidential">Confidencial</span></p>
   </div>
 
-  <div class="hub-grid">
-    <a class="hub-card" href="audit.html">
-      <div class="hub-card-num">01</div>
-      <div class="hub-card-title" data-pt="Auditoria de Marca" data-en="Brand Audit">Auditoria de Marca</div>
-      <div class="hub-card-desc" data-pt="Avaliação completa da identidade visual, verbal, digital e posicionamento actual." data-en="Full assessment of visual, verbal, digital identity and current positioning.">Avaliação completa da identidade visual, verbal, digital e posicionamento actual.</div>
-      <div class="hub-card-status status-live">LIVE</div>
+  <div class="bento">
+    <a class="bento-card feature" href="audit.html">
+      <div class="bento-num">01</div>
+      <div class="bento-label live">LIVE</div>
+      <div class="bento-title" data-pt="Auditoria de Marca" data-en="Brand Audit">Auditoria de Marca</div>
+      <div class="bento-desc" data-pt="Avaliação completa da identidade visual, verbal, digital e posicionamento actual da EPAL." data-en="Full assessment of visual, verbal, digital identity and current positioning of EPAL.">Avaliação completa da identidade visual, verbal, digital e posicionamento actual da EPAL.</div>
     </a>
-    <a class="hub-card" href="landscape.html">
-      <div class="hub-card-num">02</div>
-      <div class="hub-card-title" data-pt="Landscape Competitivo" data-en="Competitive Landscape">Landscape Competitivo</div>
-      <div class="hub-card-desc" data-pt="Análise de concorrentes directos, marcas adjacentes e referências aspiracionais com mapa de posicionamento." data-en="Direct competitors, adjacent brands and aspirational references analysis with positioning map.">Análise de concorrentes directos, marcas adjacentes e referências aspiracionais com mapa de posicionamento.</div>
-      <div class="hub-card-status status-live">LIVE</div>
+    <a class="bento-card side" href="landscape.html">
+      <div class="bento-label live">LIVE</div>
+      <div class="bento-title" data-pt="Landscape Competitivo" data-en="Competitive Landscape">Landscape Competitivo</div>
+      <div class="bento-desc" data-pt="Concorrentes, referências, mapa de posicionamento." data-en="Competitors, references, positioning map.">Concorrentes, referências, mapa de posicionamento.</div>
     </a>
-    <a class="hub-card" href="proposal.html">
-      <div class="hub-card-num">03</div>
-      <div class="hub-card-title" data-pt="Proposta Comercial" data-en="Commercial Proposal">Proposta Comercial</div>
-      <div class="hub-card-desc" data-pt="Investimento, fases, cronograma, equipa e condições de pagamento." data-en="Investment, phases, timeline, team and payment terms.">Investimento, fases, cronograma, equipa e condições de pagamento.</div>
-      <div class="hub-card-status status-live">LIVE</div>
+    <a class="bento-card side" href="proposal.html">
+      <div class="bento-label live">LIVE</div>
+      <div class="bento-title" data-pt="Proposta Comercial" data-en="Commercial Proposal">Proposta Comercial</div>
+      <div class="bento-desc" data-pt="Investimento, fases, cronograma, equipa." data-en="Investment, phases, timeline, team.">Investimento, fases, cronograma, equipa.</div>
     </a>
-    <a class="hub-card" href="#">
-      <div class="hub-card-num">04</div>
-      <div class="hub-card-title" data-pt="Personas de Audiência" data-en="Audience Personas">Personas de Audiência</div>
-      <div class="hub-card-desc" data-pt="Perfis detalhados dos segmentos-alvo da EPAL com comportamentos e necessidades." data-en="Detailed profiles of EPAL's target segments with behaviours and needs.">Perfis detalhados dos segmentos-alvo da EPAL com comportamentos e necessidades.</div>
-      <div class="hub-card-status status-soon" data-pt="EM BREVE" data-en="COMING SOON">EM BREVE</div>
+    <a class="bento-card medium" href="#">
+      <div class="bento-label soon" data-pt="EM BREVE" data-en="COMING SOON">EM BREVE</div>
+      <div class="bento-title" data-pt="Personas" data-en="Personas">Personas</div>
+      <div class="bento-desc" data-pt="Perfis detalhados dos segmentos-alvo." data-en="Detailed target segment profiles.">Perfis detalhados dos segmentos-alvo.</div>
     </a>
-    <a class="hub-card" href="#">
-      <div class="hub-card-num">05</div>
-      <div class="hub-card-title" data-pt="Case Studies" data-en="Case Studies">Case Studies</div>
-      <div class="hub-card-desc" data-pt="Exemplos reais de rebrands bem-sucedidos em categorias semelhantes." data-en="Real examples of successful rebrands in similar categories.">Exemplos reais de rebrands bem-sucedidos em categorias semelhantes.</div>
-      <div class="hub-card-status status-soon" data-pt="EM BREVE" data-en="COMING SOON">EM BREVE</div>
+    <a class="bento-card medium" href="#">
+      <div class="bento-label soon" data-pt="EM BREVE" data-en="COMING SOON">EM BREVE</div>
+      <div class="bento-title">Case Studies</div>
+      <div class="bento-desc" data-pt="Rebrands bem-sucedidos em categorias semelhantes." data-en="Successful rebrands in similar categories.">Rebrands bem-sucedidos em categorias semelhantes.</div>
     </a>
-    <a class="hub-card" href="#">
-      <div class="hub-card-num">06</div>
-      <div class="hub-card-title" data-pt="Mood Boards" data-en="Mood Boards">Mood Boards</div>
-      <div class="hub-card-desc" data-pt="2–3 direcções visuais abstractas para reacção antes de aprovar o investimento." data-en="2–3 abstract visual directions for reaction before approving investment.">2–3 direcções visuais abstractas para reacção antes de aprovar o investimento.</div>
-      <div class="hub-card-status status-soon" data-pt="EM BREVE" data-en="COMING SOON">EM BREVE</div>
+    <a class="bento-card medium" href="#">
+      <div class="bento-label soon" data-pt="EM BREVE" data-en="COMING SOON">EM BREVE</div>
+      <div class="bento-title">Mood Boards</div>
+      <div class="bento-desc" data-pt="Direcções visuais abstractas." data-en="Abstract visual directions.">Direcções visuais abstractas.</div>
     </a>
   </div>
 
-  <div class="hub-footer">
-    <div class="hub-footer-name">Pedro Gomes — Creative Director & Strategist</div>
-    <div class="hub-footer-contact">hello@pedraw.co.uk &nbsp;|&nbsp; +44 7756 440505</div>
-  </div>
+  <div class="hub-footer">Pedro Gomes — hello@pedraw.co.uk · +44 7756 440505</div>
 </div>
 
 <script>
