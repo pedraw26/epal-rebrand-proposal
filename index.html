@@ -46,9 +46,9 @@
   /* BENTO HUB */
   .hub{max-width:1080px;width:100%}
 
-  .hub-header{text-align:center;margin-bottom:56px;animation:gfi .8s ease forwards}
-  .hub-title{font-family:var(--display);font-size:clamp(40px,5vw,56px);font-weight:700;letter-spacing:-.02em}
-  .hub-sub{font-size:15px;color:var(--gray-400);margin-top:8px}
+  .hub-header{position:fixed;top:28px;left:28px;z-index:300;animation:gfi .8s ease forwards}
+  .hub-title{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.01em;color:var(--white)}
+  .hub-sub{position:fixed;bottom:28px;left:28px;font-size:12px;color:var(--gray-500);z-index:300}
 
   .bento{display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:auto;gap:16px}
 
@@ -117,8 +117,8 @@
 <div class="hub">
   <div class="hub-header">
     <h1 class="hub-title" data-pt="epal © Rebrand Hub" data-en="epal © Rebrand Hub">epal © Rebrand Hub</h1>
-    <p class="hub-sub">Pedro Gomes · <span data-pt="Abril 2026" data-en="April 2026">Abril 2026</span> · <span data-pt="Confidencial" data-en="Confidential">Confidencial</span></p>
   </div>
+  <p class="hub-sub">Pedro Gomes · <span data-pt="Abril 2026" data-en="April 2026">Abril 2026</span> · <span data-pt="Confidencial" data-en="Confidential">Confidencial</span></p>
 
   <div class="bento">
     <a class="bento-card feature" href="audit.html">
@@ -154,7 +154,6 @@
     </a>
   </div>
 
-  <div class="hub-footer">Pedro Gomes — hello@pedraw.co.uk · +44 7756 440505</div>
 </div>
 
 <script>
