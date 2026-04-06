@@ -149,7 +149,9 @@
 </div>
 
 <script>
-function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrand'){f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
+// ---- SESSION AUTH ----
+if(sessionStorage.getItem('epal_auth')==='true'){document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');}
+function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrand'){sessionStorage.setItem('epal_auth','true');f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
 let currentLang='pt';
 function setLang(l){currentLang=l;document.documentElement.lang=l;document.title=l==='pt'?'EPAL — Hub do Rebrand':'EPAL — Rebrand Hub';document.getElementById('btnPT').classList.toggle('active',l==='pt');document.getElementById('btnEN').classList.toggle('active',l==='en');document.querySelectorAll('[data-'+l+']').forEach(el=>{el.innerHTML=el.getAttribute('data-'+l);});}
 </script>

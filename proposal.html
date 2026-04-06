@@ -615,7 +615,8 @@
 </section>
 
 <script>
-// ---- PASSWORD GATE ----
+// ---- SESSION AUTH ----
+if(sessionStorage.getItem('epal_auth')==='true'){document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');}
 function checkPassword(e) {
   e.preventDefault();
   const input = document.getElementById('gateInput');
@@ -624,6 +625,7 @@ function checkPassword(e) {
   const spinner = document.getElementById('gateSpinner');
 
   if (input.value === 'rebrand') {
+    sessionStorage.setItem('epal_auth','true');
     form.style.display = 'none';
     spinner.classList.add('active');
     setTimeout(() => {
