@@ -26,6 +26,83 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body { font-family: var(--text); color: var(--near-black); background: var(--black); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body.locked { overflow: hidden; }
+
+  /* PASSWORD / LOADING SCREEN */
+  .gate-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--black);
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    transition: opacity .6s ease, visibility .6s ease;
+  }
+  .gate-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .gate-logo {
+    font-family: var(--display); font-size: 48px; font-weight: 700; color: var(--white);
+    letter-spacing: 3px; margin-bottom: 8px;
+    animation: gate-fade-in 1s ease forwards;
+  }
+  .gate-sub {
+    font-family: var(--text); font-size: 14px; color: var(--gray-500);
+    margin-bottom: 48px; letter-spacing: 1px;
+    animation: gate-fade-in 1s ease .3s forwards; opacity: 0;
+  }
+  .gate-form {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    animation: gate-fade-in 1s ease .6s forwards; opacity: 0;
+  }
+  .gate-input {
+    width: 280px; padding: 14px 20px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    font-family: var(--text); font-size: 15px; color: var(--white);
+    outline: none; text-align: center;
+    letter-spacing: 2px;
+    transition: border-color .3s ease, background .3s ease;
+  }
+  .gate-input::placeholder { color: var(--gray-500); letter-spacing: 1px; font-size: 13px; }
+  .gate-input:focus { border-color: var(--blue); background: rgba(255,255,255,.08); }
+  .gate-input.error { border-color: #FF3B30; animation: shake .4s ease; }
+
+  .gate-btn {
+    width: 280px; padding: 14px 20px;
+    background: var(--blue); border: none; border-radius: 12px;
+    font-family: var(--text); font-size: 14px; font-weight: 600; color: var(--white);
+    cursor: pointer; letter-spacing: .5px;
+    transition: background .3s ease, transform .15s ease;
+  }
+  .gate-btn:hover { background: #0077ED; }
+  .gate-btn:active { transform: scale(.97); }
+
+  .gate-error-msg {
+    font-size: 12px; color: #FF3B30; height: 16px;
+    font-family: var(--text); transition: opacity .3s ease;
+    opacity: 0;
+  }
+  .gate-error-msg.show { opacity: 1; }
+
+  .gate-spinner {
+    width: 24px; height: 24px;
+    border: 2px solid rgba(255,255,255,.15);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .gate-spinner.active { display: block; }
+
+  .gate-glow {
+    position: absolute; width: 400px; height: 400px; border-radius: 50%;
+    filter: blur(100px); opacity: .06; pointer-events: none;
+  }
+  .gate-glow-1 { background: var(--blue); top: -100px; right: -50px; }
+  .gate-glow-2 { background: #00C2FF; bottom: -100px; left: -50px; }
+
+  @keyframes gate-fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 50%{transform:translateX(8px)} 75%{transform:translateX(-4px)} }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .slide { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
   .slide-inner { width: 100%; max-width: 1120px; padding: 80px 60px; }
@@ -164,7 +241,21 @@
   @keyframes pulse-down { 0%,100%{opacity:.4;transform:translateX(-50%) translateY(0)} 50%{opacity:1;transform:translateX(-50%) translateY(6px)} }
 </style>
 </head>
-<body>
+<body class="locked">
+
+<!-- PASSWORD GATE -->
+<div class="gate-overlay" id="gate">
+  <div class="gate-glow gate-glow-1"></div>
+  <div class="gate-glow gate-glow-2"></div>
+  <div class="gate-logo">EPAL</div>
+  <div class="gate-sub">Confidential Proposal</div>
+  <div class="gate-spinner" id="gateSpinner"></div>
+  <form class="gate-form" id="gateForm" onsubmit="return checkPassword(event)">
+    <input class="gate-input" id="gateInput" type="password" placeholder="Enter password" autocomplete="off" autofocus>
+    <button class="gate-btn" type="submit">Access Proposal</button>
+    <div class="gate-error-msg" id="gateError">Incorrect password</div>
+  </form>
+</div>
 
 <div class="progress-bar" id="progressBar"></div>
 <nav class="nav-dots" id="navDots"></nav>
@@ -518,6 +609,32 @@
 </section>
 
 <script>
+// ---- PASSWORD GATE ----
+function checkPassword(e) {
+  e.preventDefault();
+  const input = document.getElementById('gateInput');
+  const error = document.getElementById('gateError');
+  const form = document.getElementById('gateForm');
+  const spinner = document.getElementById('gateSpinner');
+
+  if (input.value === 'rebrand') {
+    form.style.display = 'none';
+    spinner.classList.add('active');
+    setTimeout(() => {
+      document.getElementById('gate').classList.add('hidden');
+      document.body.classList.remove('locked');
+    }, 800);
+  } else {
+    input.classList.add('error');
+    error.classList.add('show');
+    setTimeout(() => { input.classList.remove('error'); }, 400);
+    setTimeout(() => { error.classList.remove('show'); }, 2000);
+    input.value = '';
+    input.focus();
+  }
+  return false;
+}
+
 // ---- LANGUAGE SYSTEM ----
 let currentLang = 'pt';
 
