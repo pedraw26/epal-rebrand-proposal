@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>epal — Personas de Audiência</title>
+<style>
+  @font-face{font-family:'SF Pro Display';src:local('SF Pro Display')}
+  @font-face{font-family:'SF Pro Text';src:local('SF Pro Text')}
+  :root{--black:#000;--near-black:#1D1D1F;--gray-700:#424245;--gray-500:#6E6E73;--gray-400:#86868B;--gray-200:#D2D2D7;--gray-100:#F5F5F7;--white:#FFF;--blue:#0071E3;--red:#FF3B30;--green:#30D158;--amber:#FF9F0A;--purple:#BF5AF2;--teal:#64D2FF;--pink:#FF375F;
+    --display:'SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif;--text:'SF Pro Text',-apple-system,BlinkMacSystemFont,sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--text);color:var(--near-black);background:var(--black);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body.locked{overflow:hidden}
+
+  .gate-overlay{position:fixed;inset:0;z-index:9999;background:var(--black);display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .6s,visibility .6s}
+  .gate-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+  .gate-logo{font-family:var(--display);font-size:48px;font-weight:700;color:var(--white);letter-spacing:3px;margin-bottom:8px;animation:gfi 1s ease forwards}
+  .gate-sub{font-family:var(--text);font-size:14px;color:var(--gray-500);margin-bottom:48px;letter-spacing:1px;animation:gfi 1s ease .3s forwards;opacity:0}
+  .gate-form{display:flex;flex-direction:column;align-items:center;gap:16px;animation:gfi 1s ease .6s forwards;opacity:0}
+  .gate-input{width:280px;padding:14px 20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;font-family:var(--text);font-size:15px;color:var(--white);outline:none;text-align:center;letter-spacing:2px;transition:border-color .3s,background .3s}
+  .gate-input::placeholder{color:var(--gray-500);letter-spacing:1px;font-size:13px}
+  .gate-input:focus{border-color:var(--blue);background:rgba(255,255,255,.08)}
+  .gate-input.error{border-color:#FF3B30;animation:shake .4s}
+  .gate-btn{width:280px;padding:14px 20px;background:var(--blue);border:none;border-radius:12px;font-family:var(--text);font-size:14px;font-weight:600;color:var(--white);cursor:pointer;transition:background .3s,transform .15s}
+  .gate-btn:hover{background:#0077ED}.gate-btn:active{transform:scale(.97)}
+  .gate-error-msg{font-size:12px;color:#FF3B30;height:16px;opacity:0;transition:opacity .3s}.gate-error-msg.show{opacity:1}
+  .gate-spinner{width:24px;height:24px;border:2px solid rgba(255,255,255,.15);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px;display:none}.gate-spinner.active{display:block}
+  @keyframes gfi{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .slide{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .slide-inner{width:100%;max-width:1120px;padding:80px 60px}
+  .dark{background:var(--near-black);color:var(--white)}.dark .label{color:var(--gray-500)}.dark .body-lg,.dark .body-md{color:var(--gray-400)}
+  .light{background:var(--white);color:var(--near-black)}.light .label{color:var(--gray-400)}
+  .alt{background:var(--gray-100);color:var(--near-black)}.alt .label{color:var(--gray-400)}
+
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.25,.46,.45,.94),transform .8s cubic-bezier(.25,.46,.45,.94)}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  .reveal-delay-1{transition-delay:.15s}.reveal-delay-2{transition-delay:.3s}.reveal-delay-3{transition-delay:.45s}
+  .reveal-delay-4{transition-delay:.6s}.reveal-delay-5{transition-delay:.75s}.reveal-delay-6{transition-delay:.9s}
+  .reveal-scale{opacity:0;transform:scale(.92);transition:opacity .8s ease,transform .8s cubic-bezier(.25,.46,.45,.94)}.reveal-scale.visible{opacity:1;transform:scale(1)}
+
+  .label{font-family:var(--text);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+  .headline{font-family:var(--display);font-weight:700;line-height:1.08;letter-spacing:-.02em}
+  .headline-xl{font-size:clamp(48px,6vw,72px)}.headline-lg{font-size:clamp(36px,4.5vw,56px)}
+  .headline-md{font-size:clamp(28px,3.5vw,40px)}.headline-sm{font-size:clamp(22px,2.5vw,30px)}
+  .body-lg{font-family:var(--text);font-size:19px;line-height:1.58;color:var(--gray-500)}
+  .body-md{font-family:var(--text);font-size:15px;line-height:1.6;color:var(--gray-500)}
+
+  .nav-dots{position:fixed;right:28px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:8px}
+  .nav-dot{width:8px;height:8px;border-radius:50%;background:var(--gray-500);opacity:.3;cursor:pointer;transition:all .3s;border:none}
+  .nav-dot.active{opacity:1;background:var(--blue);transform:scale(1.3)}.nav-dot:hover{opacity:.7}
+  .progress-bar{position:fixed;top:0;left:0;height:2px;background:var(--blue);z-index:200;transition:width .3s}
+  .lang-toggle{position:fixed;top:24px;right:28px;z-index:300;display:flex;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border-radius:8px;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+  .lang-btn{padding:6px 14px;font-family:var(--text);font-size:12px;font-weight:600;letter-spacing:.5px;border:none;cursor:pointer;transition:all .3s;background:transparent;color:var(--gray-400)}
+  .lang-btn.active{background:var(--blue);color:var(--white)}.lang-btn:hover:not(.active){color:var(--white)}
+  .back-link{position:fixed;top:24px;left:28px;z-index:300;font-family:var(--text);font-size:12px;font-weight:600;color:var(--gray-400);text-decoration:none;letter-spacing:.5px;transition:color .3s}.back-link:hover{color:var(--blue)}.back-link::before{content:'\2190';margin-right:6px}
+  .slide-credit{position:absolute;bottom:28px;left:60px;font-family:var(--text);font-size:11px;letter-spacing:.5px;opacity:.35}
+  .dark .slide-credit{color:var(--gray-400)}.light .slide-credit,.alt .slide-credit{color:var(--gray-500)}
+  .cover-sub{font-family:var(--display);font-size:clamp(28px,3.5vw,44px);font-weight:400;color:var(--gray-400);margin-bottom:20px}
+  .cover-desc{font-size:17px;color:var(--gray-500);margin-bottom:60px}
+  .cover-meta{font-size:13px;color:var(--gray-500)}
+  .scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;animation:pulse-down 2s ease infinite}
+  .scroll-hint span{font-size:11px;color:var(--gray-500);letter-spacing:1px}
+  .scroll-arrow{width:20px;height:20px;border-right:1.5px solid var(--gray-500);border-bottom:1.5px solid var(--gray-500);transform:rotate(45deg)}
+  @keyframes pulse-down{0%,100%{opacity:.4;transform:translateX(-50%) translateY(0)}50%{opacity:1;transform:translateX(-50%) translateY(6px)}}
+
+  /* PERSONA CARDS */
+  .persona-slide{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;padding:60px}
+  .persona-card{max-width:1000px;width:100%;display:grid;grid-template-columns:300px 1fr;gap:0;border-radius:24px;overflow:hidden}
+  @media(max-width:768px){.persona-card{grid-template-columns:1fr}}
+
+  .persona-left{padding:48px 40px;display:flex;flex-direction:column;justify-content:center}
+  .persona-right{padding:48px 40px;display:flex;flex-direction:column;justify-content:center}
+
+  .persona-avatar{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:32px;font-weight:700;margin-bottom:20px}
+  .persona-name{font-family:var(--display);font-size:28px;font-weight:700;margin-bottom:4px}
+  .persona-age{font-size:14px;margin-bottom:16px}
+  .persona-location{font-size:13px;margin-bottom:4px}
+  .persona-job{font-size:13px;margin-bottom:24px}
+  .persona-quote{font-family:var(--display);font-size:17px;font-weight:500;font-style:italic;line-height:1.4;padding-left:16px;border-left:2px solid}
+
+  .persona-section{margin-bottom:24px}
+  .persona-section:last-child{margin-bottom:0}
+  .persona-section-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+  .persona-section-body{font-size:14px;line-height:1.6}
+
+  .persona-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .persona-tag{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px}
+
+  .persona-bar{height:6px;border-radius:3px;margin-top:6px;margin-bottom:16px}
+  .persona-bar-label{font-size:11px;display:flex;justify-content:space-between;margin-bottom:4px}
+
+  /* PERSONA THEMES */
+  .p1 .persona-left{background:#1a1a3e}.p1 .persona-right{background:#12122e}
+  .p1 .persona-avatar{background:rgba(191,90,242,.15);color:var(--purple)}
+  .p1 .persona-name,.p1 .persona-section-title{color:var(--white)}
+  .p1 .persona-age{color:var(--purple)}.p1 .persona-location,.p1 .persona-job{color:var(--gray-400)}
+  .p1 .persona-quote{color:rgba(255,255,255,.7);border-color:var(--purple)}
+  .p1 .persona-section-body{color:var(--gray-400)}
+  .p1 .persona-tag{background:rgba(191,90,242,.1);color:var(--purple)}
+  .p1 .persona-bar{background:var(--purple)}
+
+  .p2 .persona-left{background:#0e2a1e}.p2 .persona-right{background:#0a1f16}
+  .p2 .persona-avatar{background:rgba(48,209,88,.12);color:var(--green)}
+  .p2 .persona-name,.p2 .persona-section-title{color:var(--white)}
+  .p2 .persona-age{color:var(--green)}.p2 .persona-location,.p2 .persona-job{color:var(--gray-400)}
+  .p2 .persona-quote{color:rgba(255,255,255,.7);border-color:var(--green)}
+  .p2 .persona-section-body{color:var(--gray-400)}
+  .p2 .persona-tag{background:rgba(48,209,88,.1);color:var(--green)}
+  .p2 .persona-bar{background:var(--green)}
+
+  .p3 .persona-left{background:#1a2a3e}.p3 .persona-right{background:#121e2e}
+  .p3 .persona-avatar{background:rgba(100,210,255,.12);color:var(--teal)}
+  .p3 .persona-name,.p3 .persona-section-title{color:var(--white)}
+  .p3 .persona-age{color:var(--teal)}.p3 .persona-location,.p3 .persona-job{color:var(--gray-400)}
+  .p3 .persona-quote{color:rgba(255,255,255,.7);border-color:var(--teal)}
+  .p3 .persona-section-body{color:var(--gray-400)}
+  .p3 .persona-tag{background:rgba(100,210,255,.1);color:var(--teal)}
+  .p3 .persona-bar{background:var(--teal)}
+
+  .p4 .persona-left{background:#2a1a0e}.p4 .persona-right{background:#1f140a}
+  .p4 .persona-avatar{background:rgba(255,159,10,.12);color:var(--amber)}
+  .p4 .persona-name,.p4 .persona-section-title{color:var(--white)}
+  .p4 .persona-age{color:var(--amber)}.p4 .persona-location,.p4 .persona-job{color:var(--gray-400)}
+  .p4 .persona-quote{color:rgba(255,255,255,.7);border-color:var(--amber)}
+  .p4 .persona-section-body{color:var(--gray-400)}
+  .p4 .persona-tag{background:rgba(255,159,10,.1);color:var(--amber)}
+  .p4 .persona-bar{background:var(--amber)}
+
+  .p5 .persona-left{background:#2a0e1a}.p5 .persona-right{background:#1f0a14}
+  .p5 .persona-avatar{background:rgba(255,55,95,.12);color:var(--pink)}
+  .p5 .persona-name,.p5 .persona-section-title{color:var(--white)}
+  .p5 .persona-age{color:var(--pink)}.p5 .persona-location,.p5 .persona-job{color:var(--gray-400)}
+  .p5 .persona-quote{color:rgba(255,255,255,.7);border-color:var(--pink)}
+  .p5 .persona-section-body{color:var(--gray-400)}
+  .p5 .persona-tag{background:rgba(255,55,95,.1);color:var(--pink)}
+  .p5 .persona-bar{background:var(--pink)}
+
+  /* STRATEGY IMPLICATIONS */
+  .imp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-top:40px}
+  @media(max-width:768px){.imp-grid{grid-template-columns:1fr}}
+  .imp-card{padding:32px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);transition:all .4s}
+  .imp-card:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);transform:translateY(-2px)}
+  .imp-title{font-family:var(--display);font-size:18px;font-weight:600;color:var(--white);margin-bottom:8px}
+  .imp-body{font-size:14px;line-height:1.6;color:var(--gray-400)}
+</style>
+</head>
+<body class="locked">
+
+<div class="gate-overlay" id="gate">
+  <div class="gate-logo">epal</div><div class="gate-sub">Personas — Confidential</div>
+  <div class="gate-spinner" id="gateSpinner"></div>
+  <form class="gate-form" id="gateForm" onsubmit="return checkPassword(event)">
+    <input class="gate-input" id="gateInput" type="password" placeholder="Enter password" autocomplete="off" autofocus>
+    <button class="gate-btn" type="submit">Access Report</button>
+    <div class="gate-error-msg" id="gateError">Incorrect password</div>
+  </form>
+</div>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots"></nav>
+<a class="back-link" href="index.html" data-pt="Hub" data-en="Hub">Hub</a>
+<div class="lang-toggle"><button class="lang-btn active" id="btnPT" onclick="setLang('pt')">PT</button><button class="lang-btn" id="btnEN" onclick="setLang('en')">EN</button></div>
+
+<!-- SLIDE 1: COVER -->
+<section class="slide dark" id="slide-0">
+  <div class="slide-inner">
+    <div class="reveal headline headline-xl" style="color:var(--white);margin-bottom:12px;">epal</div>
+    <div class="reveal reveal-delay-1 cover-sub" data-pt="Personas de Audiência" data-en="Audience Personas">Personas de Audiência</div>
+    <div class="reveal reveal-delay-2 cover-desc" data-pt="Quem são os clientes da epal. O que precisam. Como a marca deve falar com cada um." data-en="Who epal's customers are. What they need. How the brand should speak to each one.">Quem são os clientes da epal. O que precisam. Como a marca deve falar com cada um.</div>
+    <div class="reveal reveal-delay-3 cover-meta">By Pedro Gomes & Ailton Neto</div>
+    <div class="reveal reveal-delay-3 cover-meta" style="margin-top:8px;" data-pt="Abril 2026 &nbsp;|&nbsp; Confidencial" data-en="April 2026 &nbsp;|&nbsp; Confidential">Abril 2026 &nbsp;|&nbsp; Confidencial</div>
+  </div>
+  <div class="scroll-hint"><span data-pt="DESLIZAR" data-en="SCROLL">DESLIZAR</span><div class="scroll-arrow"></div></div>
+  <div class="slide-credit">Pedro Gomes & Ailton Neto</div>
+</section>
+
+<!-- SLIDE 2: INTRO -->
+<section class="slide light" id="slide-1">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Porquê Personas" data-en="Why Personas">Porquê Personas</div>
+    <h2 class="reveal reveal-delay-1 headline headline-lg" data-pt="Uma marca que fala com todos não fala com ninguém." data-en="A brand that speaks to everyone speaks to no one.">Uma marca que fala com todos não fala com ninguém.</h2>
+    <p class="reveal reveal-delay-2 body-lg" style="max-width:640px;margin-top:24px;" data-pt="A epal serve ~500.000 clientes. Mas a mãe em Viana que compra água a revendedores e o director de ministério que quer relatórios de qualidade não são a mesma pessoa. Cada decisão de marca — tom, canal, design — deve responder: funciona para quem?" data-en="epal serves ~500,000 customers. But the mother in Viana buying water from vendors and the ministry director wanting quality reports aren't the same person. Every brand decision — tone, channel, design — must answer: works for whom?">A epal serve ~500.000 clientes. Mas a mãe em Viana que compra água a revendedores e o director de ministério que quer relatórios de qualidade não são a mesma pessoa. Cada decisão de marca — tom, canal, design — deve responder: funciona para quem?</p>
+  </div>
+</section>
+
+<!-- PERSONA 1: TERESA -->
+<section class="persona-slide" id="slide-2">
+  <div class="persona-card p1 reveal reveal-scale">
+    <div class="persona-left">
+      <div class="persona-avatar">TM</div>
+      <div class="persona-name">Teresa Mateus</div>
+      <div class="persona-age" data-pt="36 anos · Doméstica" data-en="36 years · Homemaker">36 anos · Doméstica</div>
+      <div class="persona-location" data-pt="📍 Viana, Zango" data-en="📍 Viana, Zango">📍 Viana, Zango</div>
+      <div class="persona-job" data-pt="Mãe de 3 · Rendimento baixo-médio" data-en="Mother of 3 · Low-mid income">Mãe de 3 · Rendimento baixo-médio</div>
+      <div class="persona-quote" data-pt="«Só quero saber quando vai haver água e quanto vou pagar. Sem surpresas.»" data-en="'I just want to know when there'll be water and how much I'll pay. No surprises.'">«Só quero saber quando vai haver água e quanto vou pagar. Sem surpresas.»</div>
+    </div>
+    <div class="persona-right">
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Relação com a Água" data-en="Relationship with Water">Relação com a Água</div>
+        <div class="persona-section-body" data-pt="Abastecimento irregular. Quando a rede falha, compra a revendedores informais a preços até 40x superiores ao oficial. Armazena água em bidões. A factura é uma prioridade mas o valor parece injusto quando o serviço falha." data-en="Irregular supply. When the network fails, buys from informal vendors at prices up to 40x the official rate. Stores water in drums. The bill is a priority but the value feels unfair when service fails.">Abastecimento irregular. Quando a rede falha, compra a revendedores informais a preços até 40x superiores ao oficial. Armazena água em bidões. A factura é uma prioridade mas o valor parece injusto quando o serviço falha.</div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Comportamento Digital" data-en="Digital Behaviour">Comportamento Digital</div>
+        <div class="persona-bar-label"><span>WhatsApp</span><span>100%</span></div><div class="persona-bar" style="width:100%"></div>
+        <div class="persona-bar-label"><span>Multicaixa Express</span><span>60%</span></div><div class="persona-bar" style="width:60%"></div>
+        <div class="persona-bar-label"><span>Website</span><span>5%</span></div><div class="persona-bar" style="width:5%"></div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="O Que Precisa da epal" data-en="What She Needs from epal">O Que Precisa da epal</div>
+        <div class="persona-tags">
+          <span class="persona-tag" data-pt="Alertas de corte" data-en="Outage alerts">Alertas de corte</span>
+          <span class="persona-tag" data-pt="Pagamento fácil" data-en="Easy payment">Pagamento fácil</span>
+          <span class="persona-tag" data-pt="Preço justo" data-en="Fair pricing">Preço justo</span>
+          <span class="persona-tag" data-pt="Linguagem simples" data-en="Simple language">Linguagem simples</span>
+        </div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Como Falar com Ela" data-en="How to Speak to Her">Como Falar com Ela</div>
+        <div class="persona-section-body" data-pt="Directo, simples, sem jargão. WhatsApp é o único canal que funciona. A Menha deve ser a voz — calorosa, prática, nunca condescendente. Cada mensagem deve ter uma acção clara." data-en="Direct, simple, no jargon. WhatsApp is the only channel that works. Menha should be the voice — warm, practical, never condescending. Every message needs one clear action.">Directo, simples, sem jargão. WhatsApp é o único canal que funciona. A Menha deve ser a voz — calorosa, prática, nunca condescendente. Cada mensagem deve ter uma acção clara.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERSONA 2: CARLOS -->
+<section class="persona-slide" id="slide-3">
+  <div class="persona-card p2 reveal reveal-scale">
+    <div class="persona-left">
+      <div class="persona-avatar">CN</div>
+      <div class="persona-name">Carlos Ndala</div>
+      <div class="persona-age" data-pt="48 anos · Empresário" data-en="48 years · Business Owner">48 anos · Empresário</div>
+      <div class="persona-location" data-pt="📍 Alvalade, Maianga" data-en="📍 Alvalade, Maianga">📍 Alvalade, Maianga</div>
+      <div class="persona-job" data-pt="Dono de restaurante · 12 funcionários" data-en="Restaurant owner · 12 employees">Dono de restaurante · 12 funcionários</div>
+      <div class="persona-quote" data-pt="«Quando a água pára, o meu negócio pára. Preciso de fiabilidade, não de desculpas.»" data-en="'When the water stops, my business stops. I need reliability, not excuses.'">«Quando a água pára, o meu negócio pára. Preciso de fiabilidade, não de desculpas.»</div>
+    </div>
+    <div class="persona-right">
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Relação com a Água" data-en="Relationship with Water">Relação com a Água</div>
+        <div class="persona-section-body" data-pt="A água é um custo operacional crítico. Um corte de meio dia significa cozinha fechada, clientes perdidos, e mercadoria estragada. Paga sempre a tempo mas exige factura correcta. Tem cisterna própria como backup — um investimento que não deveria precisar de fazer." data-en="Water is a critical operational cost. A half-day outage means kitchen closed, customers lost, spoiled goods. Always pays on time but demands accurate billing. Has a private cistern as backup — an investment he shouldn't need to make.">A água é um custo operacional crítico. Um corte de meio dia significa cozinha fechada, clientes perdidos, e mercadoria estragada. Paga sempre a tempo mas exige factura correcta. Tem cisterna própria como backup — um investimento que não deveria precisar de fazer.</div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Comportamento Digital" data-en="Digital Behaviour">Comportamento Digital</div>
+        <div class="persona-bar-label"><span>WhatsApp</span><span>90%</span></div><div class="persona-bar" style="width:90%"></div>
+        <div class="persona-bar-label"><span>Internet Banking</span><span>75%</span></div><div class="persona-bar" style="width:75%"></div>
+        <div class="persona-bar-label"><span>Email</span><span>40%</span></div><div class="persona-bar" style="width:40%"></div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="O Que Precisa da epal" data-en="What He Needs from epal">O Que Precisa da epal</div>
+        <div class="persona-tags">
+          <span class="persona-tag" data-pt="Fiabilidade" data-en="Reliability">Fiabilidade</span>
+          <span class="persona-tag" data-pt="Aviso antecipado" data-en="Advance notice">Aviso antecipado</span>
+          <span class="persona-tag" data-pt="Factura digital" data-en="Digital invoice">Factura digital</span>
+          <span class="persona-tag" data-pt="Linha comercial" data-en="Commercial line">Linha comercial</span>
+        </div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Como Falar com Ele" data-en="How to Speak to Him">Como Falar com Ele</div>
+        <div class="persona-section-body" data-pt="Profissional mas não burocrático. Respeitar o tempo dele — informação concisa, sem rodeios. Avisos de manutenção com 48h de antecedência mínimo. Factura por email ou WhatsApp, nunca em papel." data-en="Professional but not bureaucratic. Respect his time — concise info, no fluff. Maintenance notices 48h minimum advance. Invoice by email or WhatsApp, never paper.">Profissional mas não burocrático. Respeitar o tempo dele — informação concisa, sem rodeios. Avisos de manutenção com 48h de antecedência mínimo. Factura por email ou WhatsApp, nunca em papel.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERSONA 3: NÁDIA -->
+<section class="persona-slide" id="slide-4">
+  <div class="persona-card p3 reveal reveal-scale">
+    <div class="persona-left">
+      <div class="persona-avatar">NF</div>
+      <div class="persona-name">Nádia Fernandes</div>
+      <div class="persona-age" data-pt="27 anos · Profissional" data-en="27 years · Professional">27 anos · Profissional</div>
+      <div class="persona-location" data-pt="📍 Talatona, Kilamba" data-en="📍 Talatona, Kilamba">📍 Talatona, Kilamba</div>
+      <div class="persona-job" data-pt="Analista de marketing · Classe média" data-en="Marketing analyst · Middle class">Analista de marketing · Classe média</div>
+      <div class="persona-quote" data-pt="«Nunca fui a um balcão da epal. Se não consigo fazer pelo telefone, não faço.»" data-en="'I've never been to an epal counter. If I can't do it by phone, I don't do it.'">«Nunca fui a um balcão da epal. Se não consigo fazer pelo telefone, não faço.»</div>
+    </div>
+    <div class="persona-right">
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Relação com a Água" data-en="Relationship with Water">Relação com a Água</div>
+        <div class="persona-section-body" data-pt="Vive num condomínio recente com abastecimento estável. Paga automaticamente, quase não pensa na epal. Mas quando precisa de algo (mudar de nome, pedir segunda via), frustra-se com processos analógicos. Compara a epal com a experiência que tem com a Unitel e a Africell — e a epal perde." data-en="Lives in a recent condominium with stable supply. Pays automatically, barely thinks about epal. But when she needs something (name change, duplicate bill), she's frustrated by analogue processes. Compares epal to her experience with Unitel and Africell — and epal loses.">Vive num condomínio recente com abastecimento estável. Paga automaticamente, quase não pensa na epal. Mas quando precisa de algo (mudar de nome, pedir segunda via), frustra-se com processos analógicos. Compara a epal com a experiência que tem com a Unitel e a Africell — e a epal perde.</div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Comportamento Digital" data-en="Digital Behaviour">Comportamento Digital</div>
+        <div class="persona-bar-label"><span>WhatsApp</span><span>100%</span></div><div class="persona-bar" style="width:100%"></div>
+        <div class="persona-bar-label"><span>Apps/Mobile</span><span>95%</span></div><div class="persona-bar" style="width:95%"></div>
+        <div class="persona-bar-label"><span>Instagram</span><span>85%</span></div><div class="persona-bar" style="width:85%"></div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="O Que Precisa da epal" data-en="What She Needs from epal">O Que Precisa da epal</div>
+        <div class="persona-tags">
+          <span class="persona-tag" data-pt="Self-service total" data-en="Full self-service">Self-service total</span>
+          <span class="persona-tag">App</span>
+          <span class="persona-tag" data-pt="Sem papel" data-en="Paperless">Sem papel</span>
+          <span class="persona-tag" data-pt="Marca moderna" data-en="Modern brand">Marca moderna</span>
+        </div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Como Falar com Ela" data-en="How to Speak to Her">Como Falar com Ela</div>
+        <div class="persona-section-body" data-pt="Moderna, digital, sem formalidades. Ela não quer «Estimado Cliente» — quer um chat que resolva o problema em 2 minutos. A marca deve parecer tão boa quanto a Unitel. Se a epal parece antiga, ela ignora." data-en="Modern, digital, no formalities. She doesn't want 'Dear Customer' — she wants a chat that solves the problem in 2 minutes. The brand should look as good as Unitel. If epal looks old, she ignores it.">Moderna, digital, sem formalidades. Ela não quer «Estimado Cliente» — quer um chat que resolva o problema em 2 minutos. A marca deve parecer tão boa quanto a Unitel. Se a epal parece antiga, ela ignora.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERSONA 4: ENGENHEIRO PEDRO -->
+<section class="persona-slide" id="slide-5">
+  <div class="persona-card p4 reveal reveal-scale">
+    <div class="persona-left">
+      <div class="persona-avatar">PL</div>
+      <div class="persona-name">Eng. Pedro Lourenço</div>
+      <div class="persona-age" data-pt="55 anos · Director" data-en="55 years · Director">55 anos · Director</div>
+      <div class="persona-location" data-pt="📍 MINEA, Luanda Centro" data-en="📍 MINEA, Luanda Centre">📍 MINEA, Luanda Centro</div>
+      <div class="persona-job" data-pt="Director no Ministério de Energia e Águas" data-en="Director at Ministry of Energy and Water">Director no Ministério de Energia e Águas</div>
+      <div class="persona-quote" data-pt="«Preciso de dados que apresente ao ministro. Não de posters com mascotes.»" data-en="'I need data I can present to the minister. Not posters with mascots.'">«Preciso de dados que apresente ao ministro. Não de posters com mascotes.»</div>
+    </div>
+    <div class="persona-right">
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Relação com a epal" data-en="Relationship with epal">Relação com a epal</div>
+        <div class="persona-section-body" data-pt="Avalia a epal como instituição, não como marca. Interessa-lhe cobertura, eficiência operacional, conformidade regulatória (IRSEA), e credibilidade internacional. Lê relatórios do Banco Mundial, não comunicados de imprensa. Uma epal bem gerida reflecte bem no ministério." data-en="Evaluates epal as an institution, not a brand. Cares about coverage, operational efficiency, regulatory compliance (IRSEA), and international credibility. Reads World Bank reports, not press releases. A well-run epal reflects well on the ministry.">Avalia a epal como instituição, não como marca. Interessa-lhe cobertura, eficiência operacional, conformidade regulatória (IRSEA), e credibilidade internacional. Lê relatórios do Banco Mundial, não comunicados de imprensa. Uma epal bem gerida reflecte bem no ministério.</div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Comportamento Digital" data-en="Digital Behaviour">Comportamento Digital</div>
+        <div class="persona-bar-label"><span>Email</span><span>90%</span></div><div class="persona-bar" style="width:90%"></div>
+        <div class="persona-bar-label"><span>WhatsApp</span><span>70%</span></div><div class="persona-bar" style="width:70%"></div>
+        <div class="persona-bar-label"><span>LinkedIn</span><span>50%</span></div><div class="persona-bar" style="width:50%"></div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="O Que Precisa da epal" data-en="What He Needs from epal">O Que Precisa da epal</div>
+        <div class="persona-tags">
+          <span class="persona-tag" data-pt="Relatórios" data-en="Reports">Relatórios</span>
+          <span class="persona-tag" data-pt="Credibilidade" data-en="Credibility">Credibilidade</span>
+          <span class="persona-tag" data-pt="Dados de qualidade" data-en="Quality data">Dados de qualidade</span>
+          <span class="persona-tag" data-pt="Imagem institucional" data-en="Institutional image">Imagem institucional</span>
+        </div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Como Falar com Ele" data-en="How to Speak to Him">Como Falar com Ele</div>
+        <div class="persona-section-body" data-pt="Formal mas moderno. Competência técnica demonstrada com dados, não com slogans. Relatórios bem desenhados, apresentações profissionais. A marca institucional da epal é o que ele vê — e julga. Se parece amadora, desconfia da operação." data-en="Formal but modern. Technical competence shown through data, not slogans. Well-designed reports, professional presentations. epal's institutional brand is what he sees — and judges. If it looks amateur, he distrusts the operation.">Formal mas moderno. Competência técnica demonstrada com dados, não com slogans. Relatórios bem desenhados, apresentações profissionais. A marca institucional da epal é o que ele vê — e julga. Se parece amadora, desconfia da operação.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PERSONA 5: DONA MARIA -->
+<section class="persona-slide" id="slide-6">
+  <div class="persona-card p5 reveal reveal-scale">
+    <div class="persona-left">
+      <div class="persona-avatar">MJ</div>
+      <div class="persona-name">Dona Maria João</div>
+      <div class="persona-age" data-pt="62 anos · Reformada" data-en="62 years · Retired">62 anos · Reformada</div>
+      <div class="persona-location" data-pt="📍 Sambizanga, Rangel" data-en="📍 Sambizanga, Rangel">📍 Sambizanga, Rangel</div>
+      <div class="persona-job" data-pt="Rendimento mínimo · Vive com a filha" data-en="Minimum income · Lives with daughter">Rendimento mínimo · Vive com a filha</div>
+      <div class="persona-quote" data-pt="«Antigamente a água vinha todos os dias. Agora nunca sei quando vai chegar.»" data-en="'In the old days water came every day. Now I never know when it'll arrive.'">«Antigamente a água vinha todos os dias. Agora nunca sei quando vai chegar.»</div>
+    </div>
+    <div class="persona-right">
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Relação com a Água" data-en="Relationship with Water">Relação com a Água</div>
+        <div class="persona-section-body" data-pt="Partilha um chafariz com centenas de vizinhos. Quando o chafariz avaria, pode ficar sem água dias. Não tem conta individual — paga através de intermediários do bairro. A epal é uma entidade distante que ela sente que não se importa com o seu bairro." data-en="Shares a community tap with hundreds of neighbours. When the tap breaks, she can go days without water. Has no individual account — pays through neighbourhood intermediaries. epal is a distant entity she feels doesn't care about her area.">Partilha um chafariz com centenas de vizinhos. Quando o chafariz avaria, pode ficar sem água dias. Não tem conta individual — paga através de intermediários do bairro. A epal é uma entidade distante que ela sente que não se importa com o seu bairro.</div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Comportamento Digital" data-en="Digital Behaviour">Comportamento Digital</div>
+        <div class="persona-bar-label"><span>WhatsApp</span><span>40%</span></div><div class="persona-bar" style="width:40%"></div>
+        <div class="persona-bar-label"><span data-pt="Chamadas de voz" data-en="Voice calls">Chamadas de voz</span><span>90%</span></div><div class="persona-bar" style="width:90%"></div>
+        <div class="persona-bar-label"><span>Internet</span><span>5%</span></div><div class="persona-bar" style="width:5%"></div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="O Que Precisa da epal" data-en="What She Needs from epal">O Que Precisa da epal</div>
+        <div class="persona-tags">
+          <span class="persona-tag" data-pt="Presença no bairro" data-en="Neighbourhood presence">Presença no bairro</span>
+          <span class="persona-tag" data-pt="Chafariz funcional" data-en="Working tap">Chafariz funcional</span>
+          <span class="persona-tag" data-pt="Respeito" data-en="Respect">Respeito</span>
+          <span class="persona-tag" data-pt="Linha telefónica" data-en="Phone line">Linha telefónica</span>
+        </div>
+      </div>
+      <div class="persona-section">
+        <div class="persona-section-title" data-pt="Como Falar com Ela" data-en="How to Speak to Her">Como Falar com Ela</div>
+        <div class="persona-section-body" data-pt="Com respeito e empatia. Não digital — presencial ou por telefone. A epal precisa de existir fisicamente no bairro dela. Sinalética nos chafarizes, um número que alguém atende, comunicados via líderes comunitários. Ela é a pessoa que mais precisa da epal — e a que menos a vê." data-en="With respect and empathy. Not digital — in person or by phone. epal needs to exist physically in her neighbourhood. Signage on taps, a number someone answers, notices via community leaders. She is the person who needs epal most — and sees it least.">Com respeito e empatia. Não digital — presencial ou por telefone. A epal precisa de existir fisicamente no bairro dela. Sinalética nos chafarizes, um número que alguém atende, comunicados via líderes comunitários. Ela é a pessoa que mais precisa da epal — e a que menos a vê.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 8: IMPLICATIONS -->
+<section class="slide dark" id="slide-7">
+  <div class="slide-inner">
+    <div class="reveal label" data-pt="Implicações para a Marca" data-en="Brand Implications">Implicações para a Marca</div>
+    <h2 class="reveal reveal-delay-1 headline headline-md" style="color:var(--white);" data-pt="O que estas personas exigem do rebrand." data-en="What these personas demand from the rebrand.">O que estas personas exigem do rebrand.</h2>
+    <div class="imp-grid">
+      <div class="reveal reveal-scale reveal-delay-1 imp-card">
+        <div class="imp-title" data-pt="Dois Tons, Um Sistema" data-en="Two Tones, One System">Dois Tons, Um Sistema</div>
+        <div class="imp-body" data-pt="A Teresa e a Nádia precisam de caloroso e acessível. O Eng. Pedro precisa de competente e formal. O tom de voz deve ter um espectro, não um ponto fixo." data-en="Teresa and Nádia need warm and accessible. Eng. Pedro needs competent and formal. The tone of voice must have a spectrum, not a fixed point.">A Teresa e a Nádia precisam de caloroso e acessível. O Eng. Pedro precisa de competente e formal. O tom de voz deve ter um espectro, não um ponto fixo.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-2 imp-card">
+        <div class="imp-title" data-pt="WhatsApp É a Marca" data-en="WhatsApp Is the Brand">WhatsApp É a Marca</div>
+        <div class="imp-body" data-pt="4 de 5 personas usam WhatsApp como canal primário. A Menha não é um extra — é o touchpoint principal. O investimento no WhatsApp bot deve ser tratado como investimento de marca, não de IT." data-en="4 of 5 personas use WhatsApp as primary channel. Menha isn't an extra — she's the main touchpoint. WhatsApp bot investment should be treated as brand investment, not IT.">4 de 5 personas usam WhatsApp como canal primário. A Menha não é um extra — é o touchpoint principal. O investimento no WhatsApp bot deve ser tratado como investimento de marca, não de IT.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-3 imp-card">
+        <div class="imp-title" data-pt="A Factura É Tudo" data-en="The Bill Is Everything">A Factura É Tudo</div>
+        <div class="imp-body" data-pt="Para a Teresa e o Carlos, a factura é a marca. Para a Nádia, é o chat. Para a Dona Maria, é o chafariz. Cada persona tem um touchpoint-chave diferente — todos devem ser desenhados com a mesma qualidade." data-en="For Teresa and Carlos, the bill is the brand. For Nádia, it's the chat. For Dona Maria, it's the tap. Each persona has a different key touchpoint — all must be designed with equal quality.">Para a Teresa e o Carlos, a factura é a marca. Para a Nádia, é o chat. Para a Dona Maria, é o chafariz. Cada persona tem um touchpoint-chave diferente — todos devem ser desenhados com a mesma qualidade.</div>
+      </div>
+      <div class="reveal reveal-scale reveal-delay-4 imp-card">
+        <div class="imp-title" data-pt="A Dona Maria Não Pode Ser Esquecida" data-en="Dona Maria Cannot Be Forgotten">A Dona Maria Não Pode Ser Esquecida</div>
+        <div class="imp-body" data-pt="Um rebrand que só funciona para quem tem app e Wi-Fi falha metade da população de Luanda. A marca deve funcionar no digital E no chafariz. Modernidade sem exclusão." data-en="A rebrand that only works for people with apps and Wi-Fi fails half of Luanda's population. The brand must work digitally AND at the community tap. Modernity without exclusion.">Um rebrand que só funciona para quem tem app e Wi-Fi falha metade da população de Luanda. A marca deve funcionar no digital E no chafariz. Modernidade sem exclusão.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes & Ailton Neto</div>
+</section>
+
+<!-- CLOSING -->
+<section class="slide dark" id="slide-8" style="background:#111113;">
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal headline headline-lg" style="color:var(--white);margin-bottom:24px;" data-pt="5 pessoas. 5 realidades.<br>Uma marca para todas." data-en="5 people. 5 realities.<br>One brand for all.">5 pessoas. 5 realidades.<br>Uma marca para todas.</div>
+    <p class="reveal reveal-delay-1 body-lg" style="max-width:560px;margin:0 auto 48px;" data-pt="O rebrand da epal deve ser sofisticado o suficiente para o Eng. Pedro e humano o suficiente para a Dona Maria. Este é o verdadeiro desafio — e a verdadeira oportunidade." data-en="epal's rebrand must be sophisticated enough for Eng. Pedro and human enough for Dona Maria. This is the real challenge — and the real opportunity.">O rebrand da epal deve ser sofisticado o suficiente para o Eng. Pedro e humano o suficiente para a Dona Maria. Este é o verdadeiro desafio — e a verdadeira oportunidade.</p>
+    <div class="reveal reveal-delay-2" style="display:inline-block;padding:28px 36px;border-radius:16px;border:1px solid rgba(255,255,255,.08);">
+      <div style="font-size:15px;color:var(--white);font-weight:500;margin-bottom:4px;">Pedro Gomes & Ailton Neto</div>
+      <div style="font-size:13px;color:var(--gray-500);">hello@pedraw.co.uk &nbsp;|&nbsp; +44 7756 440505</div>
+    </div>
+  </div>
+  <div class="slide-credit">Pedro Gomes & Ailton Neto</div>
+</section>
+
+<script>
+if(sessionStorage.getItem('epal_auth')==='true'){document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');}
+function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrand'){sessionStorage.setItem('epal_auth','true');f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
+let currentLang='pt';
+function setLang(l){currentLang=l;document.documentElement.lang=l;document.title=l==='pt'?'epal — Personas de Audiência':'epal — Audience Personas';document.getElementById('btnPT').classList.toggle('active',l==='pt');document.getElementById('btnEN').classList.toggle('active',l==='en');document.querySelectorAll('[data-'+l+']').forEach(el=>{el.innerHTML=el.getAttribute('data-'+l);});}
+const obs=new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('visible');});},{threshold:.15,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal,.reveal-scale').forEach(el=>obs.observe(el));
+const slides=document.querySelectorAll('.slide,.persona-slide'),navDots=document.getElementById('navDots'),progressBar=document.getElementById('progressBar');
+slides.forEach((_,i)=>{const d=document.createElement('button');d.className='nav-dot';d.onclick=()=>slides[i].scrollIntoView({behavior:'smooth'});navDots.appendChild(d);});
+const dots=document.querySelectorAll('.nav-dot');
+slides.forEach(s=>new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting){const i=Array.from(slides).indexOf(en.target);dots.forEach((d,j)=>d.classList.toggle('active',j===i));}});},{threshold:.5}).observe(s));
+window.addEventListener('scroll',()=>{const p=document.documentElement.scrollHeight-window.innerHeight;progressBar.style.width=(p>0?(window.scrollY/p)*100:0)+'%';});
+const sh=document.querySelector('.scroll-hint');let scrolled=false;
+window.addEventListener('scroll',()=>{if(!scrolled&&window.scrollY>100){scrolled=true;sh.style.transition='opacity .5s';sh.style.opacity='0';setTimeout(()=>sh.style.display='none',500);}});
+let cur=0;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowDown'||e.key===' '||e.key==='PageDown'){e.preventDefault();cur=Math.min(cur+1,slides.length-1);slides[cur].scrollIntoView({behavior:'smooth'});}else if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();cur=Math.max(cur-1,0);slides[cur].scrollIntoView({behavior:'smooth'});}});
+slides.forEach(s=>new IntersectionObserver(e=>{e.forEach(en=>{if(en.isIntersecting)cur=Array.from(slides).indexOf(en.target);});},{threshold:.5}).observe(s));
+</script>
+</body>
+</html>
