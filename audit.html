@@ -442,7 +442,7 @@
 <script>
 // ---- SESSION AUTH ----
 if(sessionStorage.getItem('epal_auth')==='true'){document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');}
-function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrand'){sessionStorage.setItem('epal_auth','true');f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
+function checkPassword(e){e.preventDefault();const i=document.getElementById('gateInput'),er=document.getElementById('gateError'),f=document.getElementById('gateForm'),s=document.getElementById('gateSpinner');if(i.value==='rebrandepal2026'){sessionStorage.setItem('epal_auth','true');f.style.display='none';s.classList.add('active');setTimeout(()=>{document.getElementById('gate').classList.add('hidden');document.body.classList.remove('locked');},800);}else{i.classList.add('error');er.classList.add('show');setTimeout(()=>i.classList.remove('error'),400);setTimeout(()=>er.classList.remove('show'),2000);i.value='';i.focus();}return false;}
 
 // ---- LANG ----
 let currentLang='pt';
